@@ -1,0 +1,25 @@
+# --- Web Framework & Server ---
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+pydantic>=2.8.0
+python-dotenv>=1.0.0
+
+# --- Database & Vector Storage ---
+SQLAlchemy>=2.0.30
+psycopg2-binary>=2.9.9
+pgvector>=0.3.2
+
+# --- Authentication & Security ---
+passlib[bcrypt]>=1.7.4
+python-jose[cryptography]>=3.3.0
+python-multipart>=0.0.9
+
+# --- PDF Parsing ---
+pypdf>=4.3.0
+pdfplumber>=0.11.0
+
+# --- Google Gemini AI & Embeddings ---
+google-genai>=0.1.1
+
+# --- Utilities ---
+httpx>=0.27.0
