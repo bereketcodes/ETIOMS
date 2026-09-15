@@ -1,45 +1,32 @@
-from datetime import date
 from typing import List
-from uuid import UUID, uuid4
-from fastapi import APIRouter, HTTPException
+from uuid import UUID
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
 
-# Import the schemas we built
+from backend.app.database import get_db
+from backend.app.models.tender import Tender
 from backend.app.schemas.tender import TenderCreate, TenderResponse
 
 router = APIRouter(prefix="/api/tenders", tags=["Tenders"])
 
-# Temporary in-memory storage (acts like a fake database for testing)
-fake_tender_db = [
-    {
-        "id": uuid4(),
-        "title": "National Data Center Cloud Infrastructure",
-        "procuring_entity": "Ethio Telecom",
-        "sector": "Information Technology",
-        "region": "Addis Ababa",
-        "deadline": date(2026, 11, 20),
-        "status": "Open",
-        "description": "Supply of enterprise rack servers, SAN storage, and virtualization licensing.",
-        "budget": 15000000.00,
-        "requirements": ["Cisco CCIE Certified Engineers", "ISO 27001 Certified Vendor"],
-        "contact_email": "tender@ethiotelecom.et",
-        "raw_document_path": "/storage/docs/ethio_dc_2026.pdf",
-        "ai_summary": "High-budget infrastructure procurement for data center hardware and migration.",
-        "extracted_requirements": {"bond_percent": 2.0, "warranty_years": 3}
-    }
-]
-
 @router.get("", response_model=List[TenderResponse])
-def get_all_tenders():
-    """Returns a list of all active tenders."""
-    return fake_tender_db
+def get_all_tenders(db: Session = Depends(get_db)):
+    """Fetch all tenders persisted in the database."""
+    return db.query(Tender).all()
 
-@router.post("", response_model=TenderResponse, status_code=201)
-def create_tender(payload: TenderCreate):
-    """Creates a new tender. Pydantic validates the request body automatically."""
-    new_tender = payload.model_dump()
-    new_tender["id"] = uuid4()
-    new_tender["ai_summary"] = None
-    new_tender["extracted_requirements"] = None
-    
-    fake_tender_db.append(new_tender)
+@router.post("", response_model=TenderResponse, status_code=status.HTTP_201_CREATED)
+def create_tender(payload: TenderCreate, db: Session = Depends(get_db)):
+    """Creates and persists a tender to the database."""
+    new_tender = Tender(**payload.model_dump())
+    db.add(new_tender)
+    db.commit()
+    db.refresh(new_tender)
     return new_tender
+
+@router.get("/{tender_id}", response_model=TenderResponse)
+def get_tender_by_id(tender_id: UUID, db: Session = Depends(get_db)):
+    """Fetch a single tender by its UUID."""
+    tender = db.query(Tender).filter(Tender.id == tender_id).first()
+    if not tender:
+        raise HTTPException(status_code=404, detail="Tender not found")
+    return tender
