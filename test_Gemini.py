@@ -6,14 +6,13 @@ from pydantic import BaseModel, Field
 
 load_dotenv()
 
-# 1. Define the schema for structured extraction
+# 1. Define schema
 class SampleTenderExtract(BaseModel):
     procuring_entity: str = Field(description="Organization issuing the tender")
     bid_bond_etb: float | None = Field(description="Bid bond or CPO amount in ETB, if mentioned")
     submission_deadline: str = Field(description="Deadline date in YYYY-MM-DD or descriptive text")
     required_licenses: list[str] = Field(description="List of mandatory documents or licenses")
 
-# 2. Initialize the client
 # 2. Initialize client
 api_key = os.getenv("GEMINI_API_KEY")
 if not api_key:
@@ -29,7 +28,7 @@ Bidders must submit an unconditional Bid Security of ETB 200,000.00 in the form 
 Eligible bidders must present renewed Trade License, VAT Registration Certificate, and Tax Clearance.
 """
 
-# 3. Request structured JSON from Gemini
+# 3. Call using gemini-3.6-flash
 response = client.models.generate_content(
     model="gemini-3.6-flash",
     contents=f"Extract the requirements from this tender text:\n\n{sample_text}",
