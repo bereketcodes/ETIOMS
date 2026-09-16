@@ -14,7 +14,12 @@ class SampleTenderExtract(BaseModel):
     required_licenses: list[str] = Field(description="List of mandatory documents or licenses")
 
 # 2. Initialize the client
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+# 2. Initialize client
+api_key = os.getenv("GEMINI_API_KEY")
+if not api_key:
+    raise ValueError("GEMINI_API_KEY not found in .env file.")
+
+client = genai.Client(api_key=api_key)
 
 sample_text = """
 Commercial Bank of Ethiopia (CBE) invites sealed bids from eligible bidders for 
@@ -26,7 +31,7 @@ Eligible bidders must present renewed Trade License, VAT Registration Certificat
 
 # 3. Request structured JSON from Gemini
 response = client.models.generate_content(
-    model="gemini-2.5-flash",
+    model="gemini-3.6-flash",
     contents=f"Extract the requirements from this tender text:\n\n{sample_text}",
     config=types.GenerateContentConfig(
         response_mime_type="application/json",
