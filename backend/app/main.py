@@ -1,9 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.app.database import Base, engine
-from backend.app.routers import tenders
+from backend.app.routers import tenders, profile
+from backend.app.models.organization import OrganizationProfile
 
-# Automatically creates tables in etioms.db if they don't exist yet
+# Ensure all database tables (tenders + organization_profiles) exist
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
@@ -20,7 +21,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Connect modular routers
 app.include_router(tenders.router)
+app.include_router(profile.router)
 
 @app.get("/health")
 def health_check():
