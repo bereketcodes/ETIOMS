@@ -3,8 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend.app.database import Base, engine
 from backend.app.routers import tenders, profile
 from backend.app.models.organization import OrganizationProfile
+from backend.app.models.tender import Tender
 
-# Ensure all database tables (tenders + organization_profiles) exist
+# Importing both models before this call registers both tables with SQLAlchemy.
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(

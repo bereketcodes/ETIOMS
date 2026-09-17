@@ -35,10 +35,16 @@ def match_tender(tender_id: UUID, db: Session = Depends(get_db)):
     """Computes hybrid compatibility score between organization and a tender."""
     profile = db.query(OrganizationProfile).first()
     if not profile:
-        raise HTTPException(status_code=400, detail="Setup company profile first before matching.")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Organization profile not yet created.",
+        )
 
     tender = db.query(Tender).filter(Tender.id == tender_id).first()
     if not tender:
-        raise HTTPException(status_code=404, detail="Tender not found.")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Tender not found with given ID.",
+        )
 
     return calculate_match_score(profile, tender)
