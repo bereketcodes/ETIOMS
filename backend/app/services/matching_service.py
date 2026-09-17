@@ -1,5 +1,4 @@
 import os
-import json
 from google import genai
 from google.genai import types
 from pydantic import BaseModel, Field
@@ -71,10 +70,21 @@ Years in Business: {profile.years_experience}
         )
     )
 
-    ai_result = json.loads(response.text)
-    semantic_pts = float(ai_result.get("semantic_score", 0.0))
+    # google-genai deserializes a response_schema into ``parsed``.  Retain a
+    # JSON fallback for SDK versions that expose only response.text.
+    parsed = response.parsed
+    if isinstance(parsed, SemanticEvaluation):
+        evaluation = parsed
+    elif isinstance(parsed, dict):
+        evaluation = SemanticEvaluation.model_validate(parsed)
+    else:
+        evaluation = SemanticEvaluation.model_validate_json(response.text)
+
+    # Validate again at this boundary so the AI contribution cannot exceed
+    # its fixed 30-point allocation.
+    semantic_pts = round(max(0.0, min(30.0, evaluation.semantic_score)), 1)
     breakdown["ai_semantic_score"] = semantic_pts
-    breakdown["ai_justification"] = ai_result.get("justification", "")
+    breakdown["ai_justification"] = evaluation.justification
 
     total_score = round(min(100.0, det_score + semantic_pts), 1)
 
