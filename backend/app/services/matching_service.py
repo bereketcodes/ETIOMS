@@ -41,11 +41,12 @@ def calculate_match_score(profile: OrganizationProfile, tender: Tender) -> dict:
     det_score += exp_points
     breakdown["experience_score"] = round(exp_points, 1)
 
-    # --- 2. AI Semantic Match (Max: 30 pts) ---
-    api_key = os.getenv("GEMINI_API_KEY")
-    client = genai.Client(api_key=api_key)
+   # --- 2. AI Semantic Match (Max: 30 pts) ---
+    try:
+        api_key = os.getenv("GEMINI_API_KEY")
+        client = genai.Client(api_key=api_key)
 
-    ai_prompt = f"""
+        ai_prompt = f"""
 You are evaluating vendor compatibility for an Ethiopian procurement tender.
 Score the vendor's technical capability from 0 to 30 based on their past projects and certifications.
 
@@ -60,31 +61,26 @@ Past Projects: {profile.past_projects_summary}
 Years in Business: {profile.years_experience}
 """
 
-    response = client.models.generate_content(
-        model="gemini-3.6-flash",
-        contents=ai_prompt,
-        config=types.GenerateContentConfig(
-            response_mime_type="application/json",
-            response_schema=SemanticEvaluation,
-            temperature=0.1
+        response = client.models.generate_content(
+            model="gemini-3.6-flash",
+            contents=ai_prompt,
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                response_schema=SemanticEvaluation,
+                temperature=0.1
+            )
         )
-    )
 
-    # google-genai deserializes a response_schema into ``parsed``.  Retain a
-    # JSON fallback for SDK versions that expose only response.text.
-    parsed = response.parsed
-    if isinstance(parsed, SemanticEvaluation):
-        evaluation = parsed
-    elif isinstance(parsed, dict):
-        evaluation = SemanticEvaluation.model_validate(parsed)
-    else:
-        evaluation = SemanticEvaluation.model_validate_json(response.text)
+        ai_result = json.loads(response.text)
+        semantic_pts = float(ai_result.get("semantic_score", 0.0))
+        breakdown["ai_semantic_score"] = semantic_pts
+        breakdown["ai_justification"] = ai_result.get("justification", "")
 
-    # Validate again at this boundary so the AI contribution cannot exceed
-    # its fixed 30-point allocation.
-    semantic_pts = round(max(0.0, min(30.0, evaluation.semantic_score)), 1)
-    breakdown["ai_semantic_score"] = semantic_pts
-    breakdown["ai_justification"] = evaluation.justification
+    except Exception as e:
+        # Graceful degradation: do not crash if Google has a temporary outage
+        semantic_pts = 0.0
+        breakdown["ai_semantic_score"] = 0.0
+        breakdown["ai_justification"] = f"AI service temporarily unavailable (spikes in demand). Deterministic score preserved. Error: {str(e)}"
 
     total_score = round(min(100.0, det_score + semantic_pts), 1)
 
