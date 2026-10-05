@@ -5,7 +5,7 @@ from backend.app.database import Base, engine
 from backend.app.models.tender import Tender
 from backend.app.models.organization import OrganizationProfile
 from backend.app.routers import tenders, profile, intelligence
-
+from backend.app.models.tender_matches import TenderMatch
 # Initialize database schema
 Base.metadata.create_all(bind=engine)
 
@@ -27,6 +27,7 @@ app.add_middleware(
 app.include_router(tenders.router)
 app.include_router(profile.router)
 app.include_router(intelligence.router)
+
 
 @app.get("/health", tags=["System"])
 def health_check():
