@@ -1,17 +1,18 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.app.database import Base, engine
-from backend.app.routers import tenders, profile
-from backend.app.models.organization import OrganizationProfile
-from backend.app.models.tender import Tender
 
-# Importing both models before this call registers both tables with SQLAlchemy.
+from backend.app.database import Base, engine
+from backend.app.models.tender import Tender
+from backend.app.models.organization import OrganizationProfile
+from backend.app.routers import tenders, profile, intelligence
+
+# Initialize database schema
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title="ETIOMS Backend",
+    title="ETIOMS API",
     version="1.0.0",
-    description="AI-Powered Ethiopian Tender Intelligence System"
+    description="Ethiopian Tender Intelligence & Automated Compliance System"
 )
 
 app.add_middleware(
@@ -22,10 +23,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Connect modular routers
+# Connect modular endpoints
 app.include_router(tenders.router)
 app.include_router(profile.router)
+app.include_router(intelligence.router)
 
-@app.get("/health")
+@app.get("/health", tags=["System"])
 def health_check():
-    return {"status": "healthy", "service": "ETIOMS API"}
+    return {"status": "healthy", "engine": "ETIOMS Production Core"}

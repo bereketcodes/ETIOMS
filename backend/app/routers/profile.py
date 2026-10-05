@@ -8,6 +8,8 @@ from backend.app.models.tender import Tender
 from backend.app.schemas.organization import OrganizationCreate, OrganizationResponse
 from backend.app.services.matching_service import calculate_match_score
 
+from backend.app.services.compliance_service import evaluate_compliance
+
 router = APIRouter(prefix="/api/profile", tags=["Organization Profile"])
 
 @router.get("", response_model=OrganizationResponse)
@@ -48,3 +50,19 @@ def match_tender(tender_id: UUID, db: Session = Depends(get_db)):
         )
 
     return calculate_match_score(profile, tender)
+
+
+
+
+@router.get("/compliance/{tender_id}")
+def check_compliance(tender_id: UUID, db: Session = Depends(get_db)):
+    """Generates an Ethiopian procurement compliance matrix and Bid/No-Bid recommendation."""
+    profile = db.query(OrganizationProfile).first()
+    if not profile:
+        raise HTTPException(status_code=400, detail="Setup company profile first before compliance checks.")
+
+    tender = db.query(Tender).filter(Tender.id == tender_id).first()
+    if not tender:
+        raise HTTPException(status_code=404, detail="Tender not found with given ID.")
+
+    return evaluate_compliance(profile, tender)

@@ -14,7 +14,7 @@ from backend.app.services.ai_service import extract_tender_intelligence
 
 from datetime import datetime, date
 
-
+from backend.app.services.embedding_service import generate_text_embedding, cosine_similarity
 
 
 router = APIRouter(prefix="/api/tenders", tags=["Tenders"])
@@ -98,3 +98,44 @@ async def extract_and_save_pdf(
     db.refresh(new_tender)
 
     return new_tender
+
+@router.get("/semantic-search")
+def search_tenders(query: str, db: Session = Depends(get_db)):
+    """Finds tenders by meaning rather than exact word matching."""
+    if not query.strip():
+        raise HTTPException(status_code=400, detail="Query cannot be blank.")
+
+    # 1. Turn the user's search text into numbers
+    query_vector = generate_text_embedding(query)
+
+    # 2. Get all tenders from the database
+    tenders = db.query(Tender).all()
+    if not tenders:
+        return []
+
+    ranked_results = []
+
+    # 3. Compare each tender against the query
+    for tender in tenders:
+        # If the tender does not have an embedding yet, make one on the fly
+        if not tender.embedding:
+            text_to_embed = f"{tender.title}. {tender.description or ''}"
+            tender.embedding = generate_text_embedding(text_to_embed)
+            db.commit()
+
+        # Calculate closeness
+        try:
+            score = cosine_similarity(query_vector, tender.embedding)
+        except ValueError:
+            score = 0.0
+
+        ranked_results.append({
+            "id": str(tender.id),
+            "title": tender.title,
+            "procuring_entity": tender.procuring_entity,
+            "similarity_score": round(score, 3)
+        })
+
+    # 4. Sort from highest match to lowest match
+    ranked_results.sort(key=lambda item: item["similarity_score"], reverse=True)
+    return ranked_results
