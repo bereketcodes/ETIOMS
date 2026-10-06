@@ -174,3 +174,79 @@ def check_compliance(tender_id: UUID, db: Session = Depends(get_db)):
         )
 
     return evaluate_compliance(profile, tender)
+
+@router.get("/matches", status_code=status.HTTP_200_OK)
+def get_ranked_matches(
+    min_score: float = Query(0.0, ge=0.0, le=100.0, description="Filter tenders by minimum total score"),
+    db: Session = Depends(get_db)
+):
+    """
+    Evaluates all tenders against the organization profile and returns 
+    a ranked list sorted in descending order by match score.
+    """
+    profile = db.query(OrganizationProfile).first()
+    if not profile:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Configure an Organization Profile before running batch matching."
+        )
+
+    tenders = db.query(Tender).all()
+    ranked_results = []
+
+    for tender in tenders:
+        # Check cache-aside table first
+        cached_match = db.query(TenderMatch).filter(
+            TenderMatch.profile_id == str(profile.id),
+            TenderMatch.tender_id == str(tender.id)
+        ).first()
+
+        if cached_match:
+            score_data = {
+                "tender_id": cached_match.tender_id,
+                "tender_title": tender.title,
+                "procuring_entity": tender.procuring_entity,
+                "total_score": cached_match.total_score,
+                "is_qualified": cached_match.is_qualified,
+                "compliance_decision": cached_match.compliance_decision,
+                "ai_justification": cached_match.ai_justification,
+                "breakdown": cached_match.breakdown,
+                "cached": True
+            }
+        else:
+            # Cache miss: compute and persist valid results
+            match_res = calculate_match_score(profile, tender)
+            ai_justification = str(match_res.get("breakdown", {}).get("ai_justification", ""))
+            has_transient_error = "503" in ai_justification or "temporarily unavailable" in ai_justification.lower()
+
+            if not has_transient_error:
+                new_match = TenderMatch(
+                    profile_id=str(profile.id),
+                    tender_id=str(tender.id),
+                    total_score=match_res["total_score"],
+                    is_qualified=match_res["is_qualified"],
+                    compliance_decision="BID" if match_res["is_qualified"] else "NO-BID",
+                    ai_justification=ai_justification,
+                    breakdown=match_res["breakdown"]
+                )
+                db.add(new_match)
+                db.commit()
+
+            score_data = {
+                "tender_id": str(tender.id),
+                "tender_title": tender.title,
+                "procuring_entity": tender.procuring_entity,
+                "total_score": match_res["total_score"],
+                "is_qualified": match_res["is_qualified"],
+                "compliance_decision": "BID" if match_res["is_qualified"] else "NO-BID",
+                "ai_justification": ai_justification,
+                "breakdown": match_res["breakdown"],
+                "cached": False
+            }
+
+        if score_data["total_score"] >= min_score:
+            ranked_results.append(score_data)
+
+    # Sort descending by total score
+    ranked_results.sort(key=lambda x: x["total_score"], reverse=True)
+    return ranked_results
