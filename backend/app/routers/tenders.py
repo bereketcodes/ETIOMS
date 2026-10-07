@@ -1,6 +1,6 @@
 from typing import List, Optional
 from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 
 from backend.app.database import get_db
@@ -110,6 +110,37 @@ async def extract_and_save_pdf(
     extracted_text = extract_text_from_pdf(str(file_path))
     parsed = _ingest_notice_text(extracted_text)
     return _persist_ingested_tender(db, parsed, raw_document_path=str(file_path))
+
+
+@router.post("/upload", response_model=TenderResponse, status_code=status.HTTP_201_CREATED)
+async def upload_tender_notice(
+    file: Optional[UploadFile] = File(None),
+    text: Optional[str] = Form(None),
+    db: Session = Depends(get_db),
+):
+    """
+    Ingest a procurement notice from an uploaded .pdf/.txt file or pasted text.
+    """
+    raw_text = (text or "").strip()
+    saved_path = None
+
+    if file and file.filename:
+        suffix = Path(file.filename).suffix.lower()
+        if suffix not in {".pdf", ".txt"}:
+            raise HTTPException(status_code=400, detail="Only .pdf and .txt files are supported.")
+
+        file_path = UPLOAD_DIR / file.filename
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        saved_path = str(file_path)
+
+        if suffix == ".pdf":
+            raw_text = extract_text_from_pdf(saved_path)
+        else:
+            raw_text = Path(saved_path).read_text(encoding="utf-8", errors="ignore")
+
+    parsed = _ingest_notice_text(raw_text)
+    return _persist_ingested_tender(db, parsed, raw_document_path=saved_path)
 
 
 @router.get("/semantic-search")

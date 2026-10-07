@@ -14,6 +14,18 @@ from backend.app.services.compliance_service import evaluate_compliance
 router = APIRouter(prefix="/api/profile", tags=["Organization Profile & Intelligence"])
 
 
+def _tender_card_fields(tender: Tender) -> dict:
+    return {
+        "tender_title": tender.title,
+        "procuring_entity": tender.procuring_entity,
+        "sector": tender.sector,
+        "region": tender.region,
+        "deadline": tender.deadline.isoformat() if tender.deadline else None,
+        "budget": tender.budget,
+        "requirements": tender.requirements or [],
+    }
+
+
 # ---------------------------------------------------------
 # Pydantic Schemas
 # ---------------------------------------------------------
@@ -109,7 +121,8 @@ def match_tender(
                 "compliance_decision": cached_match.compliance_decision,
                 "ai_justification": cached_match.ai_justification,
                 "breakdown": cached_match.breakdown,
-                "cached": True
+                "cached": True,
+                **_tender_card_fields(tender),
             }
 
     # 4. Cache Miss or Force Refresh: Run scoring engine
@@ -148,6 +161,7 @@ def match_tender(
         db.commit()
 
     match_result["cached"] = False
+    match_result.update(_tender_card_fields(tender))
     return match_result
 
 
@@ -204,14 +218,13 @@ def get_ranked_matches(
         if cached_match:
             score_data = {
                 "tender_id": cached_match.tender_id,
-                "tender_title": tender.title,
-                "procuring_entity": tender.procuring_entity,
                 "total_score": cached_match.total_score,
                 "is_qualified": cached_match.is_qualified,
                 "compliance_decision": cached_match.compliance_decision,
                 "ai_justification": cached_match.ai_justification,
                 "breakdown": cached_match.breakdown,
-                "cached": True
+                "cached": True,
+                **_tender_card_fields(tender),
             }
         else:
             # Cache miss: compute and persist valid results
@@ -234,14 +247,13 @@ def get_ranked_matches(
 
             score_data = {
                 "tender_id": str(tender.id),
-                "tender_title": tender.title,
-                "procuring_entity": tender.procuring_entity,
                 "total_score": match_res["total_score"],
                 "is_qualified": match_res["is_qualified"],
                 "compliance_decision": "BID" if match_res["is_qualified"] else "NO-BID",
                 "ai_justification": ai_justification,
                 "breakdown": match_res["breakdown"],
-                "cached": False
+                "cached": False,
+                **_tender_card_fields(tender),
             }
 
         if score_data["total_score"] >= min_score:
