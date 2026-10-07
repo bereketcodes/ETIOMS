@@ -247,6 +247,6 @@ def get_ranked_matches(
         if score_data["total_score"] >= min_score:
             ranked_results.append(score_data)
 
-    # Sort descending by total score
+    
     ranked_results.sort(key=lambda x: x["total_score"], reverse=True)
     return ranked_results
