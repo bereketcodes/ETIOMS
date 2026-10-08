@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useRouter } from "next/navigation";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 
@@ -72,8 +73,15 @@ const regions = ["Addis Ababa", "Oromia", "Amhara", "Sidama", "Tigray", "Afar", 
 const certifications = ["Renewed Trade License", "Tax Clearance", "VAT Certificate", "TIN Certificate", "Bid Security / CPO"];
 
 async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE}${path}`, init);
+  const headers = new Headers(init?.headers);
+  const token = window.sessionStorage.getItem("access_token");
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  const response = await fetch(`${API_BASE}${path}`, { ...init, headers });
   if (!response.ok) {
+    if (response.status === 401) {
+      window.sessionStorage.removeItem("access_token");
+      window.dispatchEvent(new Event("etioms:unauthorized"));
+    }
     let message = `Request failed (${response.status})`;
     try {
       const body = await response.json();
@@ -113,6 +121,7 @@ function BrandMark() {
 }
 
 function AppShell({ view, children }: { view: View; children: React.ReactNode }) {
+  const router = useRouter();
   const links: { href: string; label: string; view: View }[] = [
     { href: "/", label: "Ranked opportunities", view: "dashboard" },
     { href: "/ingest", label: "Upload tender", view: "ingest" },
@@ -126,12 +135,77 @@ function AppShell({ view, children }: { view: View; children: React.ReactNode })
         <nav className="main-nav" aria-label="Main navigation">
           {links.map((link) => <Link key={link.href} href={link.href} className={view === link.view ? "nav-link active" : "nav-link"}>{link.label}</Link>)}
         </nav>
-        <Link className="company-chip" href="/profile"><span className="company-avatar">A</span><span>AfroTech Solutions PLC</span><span className="chip-arrow">↗</span></Link>
+        <div className="account-actions"><Link className="company-chip" href="/profile"><span className="company-avatar">A</span><span>Company profile</span><span className="chip-arrow">↗</span></Link><button className="button button-outline sign-out-button" onClick={() => { window.sessionStorage.removeItem("access_token"); window.dispatchEvent(new Event("etioms:auth-changed")); router.replace("/"); }}>Sign out</button></div>
       </header>
       <main className="page-main">{children}</main>
       <footer className="app-footer"><span>ETIOMS <span className="footer-dot">/</span> Ethiopian Tender Intelligence</span><span>Built for better bids</span></footer>
     </div>
   );
+}
+
+function AuthPage() {
+  const [mode, setMode] = useState<"login" | "register">("login");
+  const [registerWithInvite, setRegisterWithInvite] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [invitationCode, setInvitationCode] = useState("");
+  const [userName, setUserName] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setLoading(true);
+    setError("");
+    const register = mode === "register";
+    const body = register
+      ? JSON.stringify(registerWithInvite
+        ? { invitation_code: invitationCode, user_name: userName, email, password }
+        : { company_name: companyName, user_name: userName, email, password })
+      : new URLSearchParams({ username: email, password });
+    try {
+      const response = await fetch(`${API_BASE}/api/auth/${register ? "register" : "token"}`, {
+        method: "POST",
+        headers: register ? { "Content-Type": "application/json" } : { "Content-Type": "application/x-www-form-urlencoded" },
+        body,
+      });
+      if (!response.ok) {
+        const result = await response.json().catch(() => ({}));
+        throw new Error(result.detail ?? `Request failed (${response.status})`);
+      }
+      const result = await response.json() as { access_token: string };
+      window.sessionStorage.setItem("access_token", result.access_token);
+      window.dispatchEvent(new Event("etioms:auth-changed"));
+    } catch (reason) {
+      setError(getErrorMessage(reason));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return <div className="auth-page">
+    <section className="auth-card">
+      <BrandMark />
+      <p className="eyebrow">{mode === "register" ? "CREATE A COMPANY ACCOUNT" : "SECURE SIGN IN"}</p>
+      <h1>{mode === "register" ? "Start with ETIOMS" : "Welcome back"}</h1>
+      <p className="auth-description">{mode === "register" ? "Create your company workspace to assess Ethiopian tender opportunities." : "Sign in to view your company’s tender matches and profile."}</p>
+      <form className="auth-form" onSubmit={submit}>
+        {mode === "register" && <>
+          {registerWithInvite
+            ? <label className="form-control"><span>Invitation code</span><input required minLength={20} maxLength={128} value={invitationCode} onChange={(event) => setInvitationCode(event.target.value)} autoComplete="off" /></label>
+            : <label className="form-control"><span>Company name</span><input required minLength={2} maxLength={255} value={companyName} onChange={(event) => setCompanyName(event.target.value)} autoComplete="organization" /></label>}
+          <label className="form-control"><span>Your name</span><input required maxLength={120} value={userName} onChange={(event) => setUserName(event.target.value)} autoComplete="name" /></label>
+        </>}
+        <label className="form-control"><span>Email</span><input required type="email" maxLength={254} value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" /></label>
+        <label className="form-control"><span>Password</span><input required type="password" minLength={12} maxLength={128} value={password} onChange={(event) => setPassword(event.target.value)} autoComplete={mode === "register" ? "new-password" : "current-password"} /><small className="auth-hint">{mode === "register" ? "Use at least 12 characters." : " "}</small></label>
+        {error && <p className="form-error" role="alert">{error}</p>}
+        <button className="button button-primary submit-button" type="submit" disabled={loading}>{loading ? "Please wait…" : mode === "register" ? "Create company account" : "Sign in"}</button>
+      </form>
+      {mode === "register" && <p className="auth-switch"><button type="button" onClick={() => { setRegisterWithInvite(!registerWithInvite); setError(""); }}>{registerWithInvite ? "Create a new company instead" : "Have an invitation code? Join a company"}</button></p>}
+      <p className="auth-switch">{mode === "register" ? "Already registered?" : "New to ETIOMS?"}{" "}<button type="button" onClick={() => { setMode(mode === "register" ? "login" : "register"); setRegisterWithInvite(false); setError(""); }}>{mode === "register" ? "Sign in" : "Create a company account"}</button></p>
+    </section>
+  </div>;
 }
 
 function PageHeading({ eyebrow, title, description, action }: { eyebrow: string; title: string; description: string; action?: React.ReactNode }) {
@@ -333,6 +407,9 @@ function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
+  const [inviteCode, setInviteCode] = useState("");
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteError, setInviteError] = useState("");
 
   useEffect(() => {
     let mounted = true;
@@ -378,6 +455,20 @@ function ProfilePage() {
     }
   }
 
+  async function createInvite() {
+    setInviteLoading(true);
+    setInviteError("");
+    setInviteCode("");
+    try {
+      const result = await apiRequest<{ invitation_code: string }>("/api/auth/invitations", { method: "POST" });
+      setInviteCode(result.invitation_code);
+    } catch (reason) {
+      setInviteError(getErrorMessage(reason));
+    } finally {
+      setInviteLoading(false);
+    }
+  }
+
   return <AppShell view="profile">
     <PageHeading eyebrow="COMPANY READINESS" title="Your company profile" description="Keep your capabilities current. ETIOMS uses this information to qualify and rank tenders." action={<span className="profile-status"><i /> Profile settings</span>} />
     {loading ? <div className="profile-loading"><div className="skeleton-line short" /><div className="skeleton-line wide" /><div className="skeleton-line medium" /><div className="skeleton-line wide" /></div> : <form className="profile-form" onSubmit={saveProfile}>
@@ -387,10 +478,26 @@ function ProfilePage() {
       {error && <p className="form-error">{error}</p>}
       <div className="profile-actions"><span>{saved ? <span className="saved-message">✓ Profile saved successfully</span> : "Changes are saved to your ETIOMS profile."}</span><button className="button button-primary" type="submit" disabled={saving}>{saving ? <><span className="button-spinner" />Saving profile…</> : <>Save company profile <span>↗</span></>}</button></div>
     </form>}
+    <section className="form-panel invite-panel"><div className="panel-heading"><div><span className="step-number">＋</span><div><h2>Invite a company member</h2><p>Anyone in your company can create a single-use invitation, valid for 24 hours.</p></div></div></div><button className="button button-outline" type="button" onClick={() => void createInvite()} disabled={inviteLoading}>{inviteLoading ? "Creating invitation…" : "Create invitation code"}</button>{inviteError && <p className="form-error" role="alert">{inviteError}</p>}{inviteCode && <p className="invite-code" aria-live="polite">Share this one-time code: <code>{inviteCode}</code></p>}</section>
   </AppShell>;
 }
 
+function subscribeToAuth(onChange: () => void) {
+  window.addEventListener("etioms:auth-changed", onChange);
+  window.addEventListener("etioms:unauthorized", onChange);
+  return () => {
+    window.removeEventListener("etioms:auth-changed", onChange);
+    window.removeEventListener("etioms:unauthorized", onChange);
+  };
+}
+
+function getAuthSnapshot() {
+  return Boolean(window.sessionStorage.getItem("access_token"));
+}
+
 export default function EtiomsApp({ view }: { view: View }) {
+  const authenticated = useSyncExternalStore(subscribeToAuth, getAuthSnapshot, () => false);
+  if (!authenticated) return <AuthPage />;
   if (view === "ingest") return <IngestPage />;
   if (view === "profile") return <ProfilePage />;
   return <Dashboard />;
