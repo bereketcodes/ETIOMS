@@ -10,8 +10,14 @@ from backend.app.models.tender import Tender
 from backend.app.models.tender_matches import TenderMatch
 from backend.app.services.matching_service import calculate_match_score
 from backend.app.services.compliance_service import evaluate_compliance
+from backend.app.models.users import User
+from backend.app.security import get_current_user
 
-router = APIRouter(prefix="/api/profile", tags=["Organization Profile & Intelligence"])
+router = APIRouter(
+    prefix="/api/profile",
+    tags=["Organization Profile & Intelligence"],
+    dependencies=[Depends(get_current_user)],
+)
 
 
 def _tender_card_fields(tender: Tender) -> dict:
@@ -44,19 +50,24 @@ class OrganizationProfileSchema(BaseModel):
 @router.post("/", status_code=status.HTTP_200_OK)
 def upsert_organization_profile(
     profile_data: OrganizationProfileSchema,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """
     Creates or updates the single-tenant enterprise profile.
     """
-    profile = db.query(OrganizationProfile).first()
+    profile = db.query(OrganizationProfile).filter(
+        OrganizationProfile.id == current_user.organization_id
+    ).first()
 
     if not profile:
-        profile = OrganizationProfile(**profile_data.model_dump())
-        db.add(profile)
-    else:
-        for key, value in profile_data.model_dump().items():
-            setattr(profile, key, value)
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Company profile not found for this account.",
+        )
+
+    for key, value in profile_data.model_dump().items():
+        setattr(profile, key, value)
 
     db.commit()
     db.refresh(profile)
@@ -64,11 +75,16 @@ def upsert_organization_profile(
 
 
 @router.get("/", status_code=status.HTTP_200_OK)
-def get_organization_profile(db: Session = Depends(get_db)):
+def get_organization_profile(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     """
     Fetches the configured enterprise profile.
     """
-    profile = db.query(OrganizationProfile).first()
+    profile = db.query(OrganizationProfile).filter(
+        OrganizationProfile.id == current_user.organization_id
+    ).first()
     if not profile:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -84,14 +100,17 @@ def get_organization_profile(db: Session = Depends(get_db)):
 def match_tender(
     tender_id: UUID,
     force_refresh: bool = Query(False, description="Set to true to bypass cache and recalculate via AI"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """
     Calculates or retrieves the cached qualification match score for a tender.
     Implements Cache-Aside pattern: checks database first, calls AI on miss.
     """
     # 1. Verify Profile exists
-    profile = db.query(OrganizationProfile).first()
+    profile = db.query(OrganizationProfile).filter(
+        OrganizationProfile.id == current_user.organization_id
+    ).first()
     if not profile:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -169,11 +188,17 @@ def match_tender(
 # FPPA Compliance & Risk Matrix
 # ---------------------------------------------------------
 @router.get("/compliance/{tender_id}", status_code=status.HTTP_200_OK)
-def check_compliance(tender_id: UUID, db: Session = Depends(get_db)):
+def check_compliance(
+    tender_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     """
     Generates an Ethiopian procurement compliance matrix and Go/No-Go decision.
     """
-    profile = db.query(OrganizationProfile).first()
+    profile = db.query(OrganizationProfile).filter(
+        OrganizationProfile.id == current_user.organization_id
+    ).first()
     if not profile:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -192,13 +217,16 @@ def check_compliance(tender_id: UUID, db: Session = Depends(get_db)):
 @router.get("/matches", status_code=status.HTTP_200_OK)
 def get_ranked_matches(
     min_score: float = Query(0.0, ge=0.0, le=100.0, description="Filter tenders by minimum total score"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """
     Evaluates all tenders against the organization profile and returns 
     a ranked list sorted in descending order by match score.
     """
-    profile = db.query(OrganizationProfile).first()
+    profile = db.query(OrganizationProfile).filter(
+        OrganizationProfile.id == current_user.organization_id
+    ).first()
     if not profile:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

@@ -37,6 +37,20 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .nav-link:hover, .nav-link.active { color: var(--green-dark); }
 .nav-link.active::after { position: absolute; right: 0; bottom: -1px; left: 0; height: 3px; background: var(--green); content: ""; }
 .company-chip { display: flex; align-items: center; gap: 9px; padding: 7px 11px 7px 7px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: #34443b; font-size: 12px; font-weight: 650; white-space: nowrap; }
+.account-actions { display: flex; align-items: center; gap: 9px; }
+.sign-out-button { min-height: 34px; padding: 0 10px; }
+.auth-page { display: grid; min-height: 100vh; place-items: center; padding: 28px 16px; }
+.auth-card { width: min(100%, 430px); padding: 32px; border: 1px solid var(--line); border-radius: 6px; background: #fff; box-shadow: 0 14px 44px rgba(28,64,46,.07); }
+.auth-card > .brand-mark { margin-bottom: 24px; }
+.auth-card h1 { margin: 0; font-family: Georgia,"Times New Roman",serif; font-size: 34px; font-weight: 500; }
+.auth-description { margin: 9px 0 23px; color: var(--muted); font-size: 12px; line-height: 1.6; }
+.auth-form { display: grid; gap: 13px; }
+.auth-hint { display: block; min-height: 12px; margin-top: 5px; color: #84918a; font-size: 10px; }
+.auth-switch { margin: 17px 0 0; color: var(--muted); font-size: 11px; text-align: center; }
+.auth-switch button { padding: 0; border: 0; color: var(--green-dark); background: transparent; cursor: pointer; font-weight: 700; }
+.invite-panel { margin-top: 18px; }
+.invite-code { display: grid; gap: 7px; margin: 14px 0 0; color: var(--muted); font-size: 11px; }
+.invite-code code { overflow-wrap: anywhere; padding: 10px; border: 1px solid var(--line); border-radius: 4px; color: var(--green-dark); background: #f7fbf8; user-select: all; }
 .company-avatar { display: grid; width: 29px; height: 29px; place-items: center; border-radius: 5px; color: var(--green-dark); background: #dcefe4; font-family: Georgia,serif; font-size: 15px; }
 .chip-arrow { margin-left: 3px; color: #829087; }
 .page-main { width: min(1160px,calc(100% - 64px)); min-height: calc(100vh - 136px); margin: 0 auto; padding: 48px 0 74px; }

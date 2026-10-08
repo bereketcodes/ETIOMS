@@ -13,9 +13,14 @@ from backend.app.services.pdf_service import extract_text_from_pdf
 from backend.app.services.ingestion_service import parse_deadline, parse_tender_notice_text
 
 from backend.app.services.embedding_service import generate_text_embedding, cosine_similarity
+from backend.app.security import get_current_user
 
 
-router = APIRouter(prefix="/api/tenders", tags=["Tenders"])
+router = APIRouter(
+    prefix="/api/tenders",
+    tags=["Tenders"],
+    dependencies=[Depends(get_current_user)],
+)
 
 UPLOAD_DIR = Path("uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)

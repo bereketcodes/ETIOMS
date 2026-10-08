@@ -8,14 +8,21 @@ from backend.app.models.organization import OrganizationProfile
 from backend.app.services.matching_service import calculate_match_score
 from backend.app.services.compliance_service import evaluate_compliance
 from backend.app.services.proposal_service import generate_bid_proposal
+from backend.app.models.users import User
+from backend.app.security import get_current_user
 
-router = APIRouter(prefix="/api/intelligence", tags=["Executive Tender Intelligence"])
+router = APIRouter(
+    prefix="/api/intelligence",
+    tags=["Executive Tender Intelligence"],
+    dependencies=[Depends(get_current_user)],
+)
 
 @router.get("/dossier/{tender_id}")
 def generate_full_tender_dossier(
     tender_id: UUID,
     include_proposal: bool = False,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """
     Executes the complete ETIOMS AI pipeline:
@@ -24,7 +31,9 @@ def generate_full_tender_dossier(
     3. Runs Ethiopian FPPA Preliminary Compliance Audit & Risk Detection
     4. (Optional) Auto-generates Technical Proposal Submission Pack
     """
-    profile = db.query(OrganizationProfile).first()
+    profile = db.query(OrganizationProfile).filter(
+        OrganizationProfile.id == current_user.organization_id
+    ).first()
     if not profile:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
