@@ -19,6 +19,16 @@ class TenderCreate(TenderBase):
     """Payload sent by the admin/client when creating a tender record."""
     raw_document_path: Optional[str] = Field(None, example="/uploads/tenders/tender_01.pdf")
 
+
+class TenderIngestRequest(BaseModel):
+    """Raw procurement notice text to parse with Gemini and persist as a tender."""
+    text: str = Field(
+        ...,
+        min_length=20,
+        max_length=100_000,
+        example="The Ministry of Health invites sealed bids for hospital IT systems...",
+    )
+
 class TenderResponse(TenderBase):
     """Payload returned back to the React client."""
     id: UUID
