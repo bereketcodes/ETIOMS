@@ -77,6 +77,7 @@ class UserResponse(BaseModel):
     email: str
     user_name: str
     organization_id: str
+    role: str
 
 
 class InvitationResponse(BaseModel):
@@ -140,6 +141,7 @@ def register(
         user_name=request.user_name.strip(),
         hashed_password=hash_password(request.password),
         organization_id=organization_id,
+        role="Team Member" if request.invitation_code else "Organization Admin",
     )
     db.add(user)
     try:
@@ -203,4 +205,24 @@ def get_me(
         email=current_user.email,
         user_name=current_user.user_name,
         organization_id=str(current_user.organization_id),
+        role=current_user.role or "Business User",
     )
+
+
+@router.get("/members", response_model=list[UserResponse])
+def get_team_members(
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+) -> list[UserResponse]:
+    """Lists colleagues in the same organization (FR-03)."""
+    users = db.query(User).filter(User.organization_id == current_user.organization_id).all()
+    return [
+        UserResponse(
+            id=str(u.id),
+            email=u.email,
+            user_name=u.user_name,
+            organization_id=str(u.organization_id),
+            role=u.role or "Team Member",
+        )
+        for u in users
+    ]

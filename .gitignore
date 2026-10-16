@@ -5,10 +5,16 @@
 
 # Python
 __pycache__/
+**/__pycache__/
 *.py[cod]
+*$py.class
 venv/
 .venv/
 
+# Local backups and database snapshots
+*.before-ai-backup
+*-before-ai.db
+
 # Frontend dependencies and build output
 frontend/node_modules/
-frontend/.next/
+frontend/.next/

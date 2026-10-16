@@ -34,3 +34,4 @@ class Tender(Base):
     raw_document_path = Column(String, nullable=True)
     ai_summary = Column(Text, nullable=True)
     extracted_requirements = Column(JSON, nullable=True)
+    embedding = Column(JSON, nullable=True)

@@ -1,6 +1,8 @@
+from datetime import date, timedelta
 from typing import List, Optional
 from uuid import UUID
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from backend.app.database import get_db
@@ -11,9 +13,17 @@ import shutil
 from pathlib import Path
 from backend.app.services.pdf_service import extract_text_from_pdf
 from backend.app.services.ingestion_service import parse_deadline, parse_tender_notice_text
-
 from backend.app.services.embedding_service import generate_text_embedding, cosine_similarity
+from backend.app.services.rag_service import answer_tender_question
 from backend.app.security import get_current_user
+
+
+class TenderQuestionRequest(BaseModel):
+    question: str = Field(..., min_length=2, description="Natural language question about tender specifications")
+
+
+class TenderCompareRequest(BaseModel):
+    tender_ids: List[UUID] = Field(..., min_length=2, max_length=5, description="List of tender UUIDs to compare")
 
 
 router = APIRouter(
@@ -67,9 +77,35 @@ def _ingest_notice_text(raw_text: str) -> dict:
 
 
 @router.get("", response_model=List[TenderResponse])
-def get_all_tenders(db: Session = Depends(get_db)):
-    """Fetch all tenders persisted in the database."""
-    return db.query(Tender).all()
+def get_all_tenders(
+    query: Optional[str] = None,
+    sector: Optional[str] = None,
+    region: Optional[str] = None,
+    status: Optional[str] = None,
+    days_until_deadline: Optional[int] = None,
+    db: Session = Depends(get_db),
+):
+    """Fetch and filter tenders by sector, region, status, search keyword, and deadline window (FR-06)."""
+    q = db.query(Tender)
+    if status:
+        q = q.filter(Tender.status == status)
+    if sector and sector.lower() != "all sectors":
+        q = q.filter(Tender.sector.ilike(f"%{sector}%"))
+    if region and region.lower() != "all regions":
+        q = q.filter(Tender.region.ilike(f"%{region}%"))
+    if query and query.strip():
+        term = f"%{query.strip()}%"
+        q = q.filter(
+            (Tender.title.ilike(term))
+            | (Tender.procuring_entity.ilike(term))
+            | (Tender.description.ilike(term))
+        )
+    if days_until_deadline is not None:
+        today = date.today()
+        cutoff = today + timedelta(days=days_until_deadline)
+        q = q.filter(Tender.deadline >= today, Tender.deadline <= cutoff)
+
+    return q.order_by(Tender.deadline.asc()).all()
 
 @router.post("", response_model=TenderResponse, status_code=status.HTTP_201_CREATED)
 def create_tender(payload: TenderCreate, db: Session = Depends(get_db)):
@@ -154,40 +190,98 @@ def search_tenders(query: str, db: Session = Depends(get_db)):
     if not query.strip():
         raise HTTPException(status_code=400, detail="Query cannot be blank.")
 
-    # 1. Turn the user's search text into numbers
-    query_vector = generate_text_embedding(query)
+    try:
+        query_vector = generate_text_embedding(query)
+    except Exception:
+        # Fallback to lexical search if embedding service encounters error
+        term = f"%{query.strip()}%"
+        matches = db.query(Tender).filter(
+            (Tender.title.ilike(term)) | (Tender.procuring_entity.ilike(term))
+        ).all()
+        return [
+            {
+                "id": str(t.id),
+                "title": t.title,
+                "procuring_entity": t.procuring_entity,
+                "similarity_score": 1.0,
+            }
+            for t in matches
+        ]
 
-    # 2. Get all tenders from the database
     tenders = db.query(Tender).all()
     if not tenders:
         return []
 
     ranked_results = []
-
-    # 3. Compare each tender against the query
     for tender in tenders:
-        # If the tender does not have an embedding yet, make one on the fly
         if not tender.embedding:
-            text_to_embed = f"{tender.title}. {tender.description or ''}"
-            tender.embedding = generate_text_embedding(text_to_embed)
-            db.commit()
+            try:
+                text_to_embed = f"{tender.title}. {tender.description or ''}"
+                tender.embedding = generate_text_embedding(text_to_embed)
+                db.commit()
+            except Exception:
+                pass
 
-        # Calculate closeness
-        try:
-            score = cosine_similarity(query_vector, tender.embedding)
-        except ValueError:
+        if tender.embedding:
+            try:
+                score = cosine_similarity(query_vector, tender.embedding)
+            except Exception:
+                score = 0.0
+        else:
             score = 0.0
 
         ranked_results.append({
             "id": str(tender.id),
             "title": tender.title,
             "procuring_entity": tender.procuring_entity,
-            "similarity_score": round(score, 3)
+            "similarity_score": round(score, 3),
         })
 
-    # 4. Sort from highest match to lowest match
     ranked_results.sort(key=lambda item: item["similarity_score"], reverse=True)
     return ranked_results
+
+
+@router.post("/compare")
+def compare_tenders(payload: TenderCompareRequest, db: Session = Depends(get_db)):
+    """Side-by-side comparison of 2 to 5 tender opportunities (FR-17)."""
+    tenders = db.query(Tender).filter(Tender.id.in_(payload.tender_ids)).all()
+    if len(tenders) < 2:
+        raise HTTPException(status_code=404, detail="Could not find sufficient matching tenders to compare.")
+
+    comparison = []
+    for t in tenders:
+        comparison.append({
+            "id": str(t.id),
+            "title": t.title,
+            "procuring_entity": t.procuring_entity,
+            "sector": t.sector,
+            "region": t.region,
+            "deadline": t.deadline.isoformat() if t.deadline else None,
+            "budget": t.budget,
+            "status": t.status,
+            "requirements": t.requirements or [],
+            "ai_summary": t.ai_summary or t.description,
+        })
+    return comparison
+
+
+@router.post("/{tender_id}/ask")
+def ask_tender_question(
+    tender_id: UUID,
+    payload: TenderQuestionRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    Natural-language question answering grounded in tender documents with citations (FR-14).
+    Complies with SRS acceptance criteria:
+    - Retrieves relevant document sections and returns answer citing source section/page.
+    - If answer cannot be found in documents, clearly states information is unavailable.
+    """
+    tender = db.query(Tender).filter(Tender.id == tender_id).first()
+    if not tender:
+        raise HTTPException(status_code=404, detail="Tender not found.")
+
+    return answer_tender_question(tender, payload.question)
 
 
 @router.get("/{tender_id}", response_model=TenderResponse)
@@ -196,4 +290,4 @@ def get_tender_by_id(tender_id: UUID, db: Session = Depends(get_db)):
     tender = db.query(Tender).filter(Tender.id == tender_id).first()
     if not tender:
         raise HTTPException(status_code=404, detail="Tender not found")
-    return tender
+    return tender
