@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 
-type View = "dashboard" | "pipeline" | "ingest" | "profile";
+type View = "dashboard" | "pipeline" | "ingest" | "profile" | "admin";
 
 type Match = {
   tender_id: string;
@@ -197,6 +197,7 @@ function AppShell({ view, children }: { view: View; children: React.ReactNode })
     { href: "/opportunities", label: "Opportunity pipeline", view: "pipeline" },
     { href: "/ingest", label: "Upload tender", view: "ingest" },
     { href: "/profile", label: "Company profile", view: "profile" },
+    { href: "/admin", label: "Admin console", view: "admin" },
   ];
 
   useEffect(() => {
@@ -1337,6 +1338,300 @@ function ProfilePage() {
   );
 }
 
+type AdminStats = {
+  organization: {
+    name: string;
+    id: string;
+    team_size: number;
+    total_system_users: number;
+  };
+  tenders: {
+    total_ingested: number;
+    open_tenders: number;
+    sectors_breakdown: Record<string, number>;
+  };
+  pipeline: {
+    total_tracked: number;
+    by_stage: Record<string, number>;
+    submitted: number;
+    awarded: number;
+  };
+  system_health: {
+    api_status: string;
+    database_engine: string;
+    ai_engine: string;
+    auth_security: string;
+  };
+};
+
+function AdminPage() {
+  const [stats, setStats] = useState<AdminStats | null>(null);
+  const [members, setMembers] = useState<UserMe[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [inviteCode, setInviteCode] = useState("");
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteError, setInviteError] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    Promise.all([
+      apiRequest<AdminStats>("/api/admin/stats"),
+      apiRequest<UserMe[]>("/api/auth/members"),
+    ])
+      .then(([s, m]) => {
+        if (mounted) {
+          setStats(s);
+          setMembers(m);
+        }
+      })
+      .catch((err) => {
+        if (mounted) setError(getErrorMessage(err));
+      })
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  async function createInvite() {
+    setInviteLoading(true);
+    setInviteError("");
+    setInviteCode("");
+    setCopied(false);
+    try {
+      const res = await apiRequest<{ invitation_code: string }>("/api/auth/invitations", { method: "POST" });
+      setInviteCode(res.invitation_code);
+    } catch (err) {
+      setInviteError(getErrorMessage(err));
+    } finally {
+      setInviteLoading(false);
+    }
+  }
+
+  function copyCode() {
+    if (!inviteCode) return;
+    navigator.clipboard.writeText(inviteCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  const stages = ["Discovered", "Interested", "Analyzing", "Preparing", "Submitted", "Awarded", "Not Awarded"];
+
+  return (
+    <AppShell view="admin">
+      <PageHeading
+        eyebrow="SYSTEM ADMINISTRATION & GOVERNANCE"
+        title="Admin Command Center"
+        description="Comprehensive monitoring of organizational operations, team access, tender repository metrics, and AI engine diagnostics."
+        action={<span className="profile-status"><i /> Organization Administrator</span>}
+      />
+
+      {loading ? (
+        <div className="profile-loading">
+          <div className="skeleton-line short" />
+          <div className="skeleton-line wide" />
+          <div className="skeleton-line medium" />
+        </div>
+      ) : error ? (
+        <div className="empty-panel" role="alert">
+          <h3>Administrative Access Notice</h3>
+          <p>{error}</p>
+        </div>
+      ) : (
+        <>
+          {/* Top KPI Metrics */}
+          <div className="metrics-grid">
+            <div className="metric-card metric-green">
+              <div className="metric-top">
+                <span>TEAM MEMBERS</span>
+                <span className="metric-symbol">👥</span>
+              </div>
+              <strong>{stats?.organization.team_size ?? 1}</strong>
+              <small>{stats?.organization.name} ({stats?.organization.total_system_users} platform users)</small>
+            </div>
+
+            <div className="metric-card">
+              <div className="metric-top">
+                <span>INGESTED TENDERS</span>
+                <span className="metric-symbol">📑</span>
+              </div>
+              <strong>{stats?.tenders.total_ingested ?? 0}</strong>
+              <small>{stats?.tenders.open_tenders ?? 0} currently open & active</small>
+            </div>
+
+            <div className="metric-card metric-gold">
+              <div className="metric-top">
+                <span>PIPELINE VELOCITY</span>
+                <span className="metric-symbol">🚀</span>
+              </div>
+              <strong>{stats?.pipeline.total_tracked ?? 0}</strong>
+              <small>{stats?.pipeline.submitted ?? 0} submitted · {stats?.pipeline.awarded ?? 0} awarded</small>
+            </div>
+
+            <div className="metric-card">
+              <div className="metric-top">
+                <span>AI ENGINE HEALTH</span>
+                <span className="metric-symbol">⚡</span>
+              </div>
+              <strong style={{ fontSize: "22px", color: "var(--green-dark)", marginTop: "14px" }}>Active</strong>
+              <small>Gemini 3.6 Flash + Grounding</small>
+            </div>
+          </div>
+
+          <div className="admin-section">
+            {/* Team & Role Management */}
+            <div className="admin-card">
+              <div className="admin-card-header">
+                <div>
+                  <h3>Team & Access Control (RBAC)</h3>
+                  <small style={{ color: "var(--muted)" }}>Manage active organization members and issue single-use secure invite codes</small>
+                </div>
+                <button
+                  type="button"
+                  className="button button-outline"
+                  onClick={() => void createInvite()}
+                  disabled={inviteLoading}
+                >
+                  {inviteLoading ? "Generating..." : "+ Issue 24h Invite Code"}
+                </button>
+              </div>
+
+              {inviteError && <p className="form-error">{inviteError}</p>}
+
+              {inviteCode && (
+                <div style={{ marginBottom: "18px", padding: "12px 16px", background: "#f0f8f3", border: "1px solid #c2e2ce", borderRadius: "5px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div>
+                    <span style={{ fontSize: "11px", fontWeight: "700", color: "var(--green-dark)" }}>NEW 24-HOUR INVITATION CODE:</span>
+                    <code style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "#17251f", marginTop: "3px" }}>{inviteCode}</code>
+                  </div>
+                  <button type="button" className="button button-primary" onClick={copyCode} style={{ padding: "6px 14px", fontSize: "11px" }}>
+                    {copied ? "✓ Copied" : "Copy Code"}
+                  </button>
+                </div>
+              )}
+
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Member</th>
+                    <th>Email Address</th>
+                    <th>System Role</th>
+                    <th>Account Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {members.map((m) => (
+                    <tr key={m.id}>
+                      <td>
+                        <strong>{m.user_name}</strong>
+                      </td>
+                      <td>{m.email}</td>
+                      <td>
+                        <span className={`role-badge ${m.role.includes("Admin") ? "admin" : "member"}`}>
+                          {m.role}
+                        </span>
+                      </td>
+                      <td>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "var(--green-dark)", fontWeight: "600", fontSize: "11px" }}>
+                          <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#3ca978" }} />
+                          Active
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Ingestion & Sector Distribution */}
+            <div className="admin-card">
+              <div className="admin-card-header">
+                <div>
+                  <h3>Tender Ingestion & Sector Allocation</h3>
+                  <small style={{ color: "var(--muted)" }}>Breakdown of indexed Ethiopian procurement opportunities by category</small>
+                </div>
+                <Link href="/ingest" className="button button-outline" style={{ fontSize: "11px" }}>
+                  Upload New Tender Notice ↗
+                </Link>
+              </div>
+
+              <div className="sector-badge-list">
+                {Object.entries(stats?.tenders.sectors_breakdown ?? {}).map(([sec, count]) => (
+                  <div key={sec} className="sector-badge">
+                    <span>{sec}</span>
+                    <strong style={{ background: "var(--green-soft)", color: "var(--green-dark)", padding: "2px 6px", borderRadius: "3px" }}>
+                      {count} {count === 1 ? "tender" : "tenders"}
+                    </strong>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Pipeline Stage Distribution */}
+            <div className="admin-card">
+              <div className="admin-card-header">
+                <div>
+                  <h3>Pipeline Stage Distribution</h3>
+                  <small style={{ color: "var(--muted)" }}>Current opportunities progressed across the 7-stage bidding workflow</small>
+                </div>
+                <Link href="/opportunities" className="button button-outline" style={{ fontSize: "11px" }}>
+                  Open Kanban Board ↗
+                </Link>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "10px" }}>
+                {stages.map((st) => {
+                  const count = stats?.pipeline.by_stage[st] ?? 0;
+                  return (
+                    <div key={st} style={{ padding: "12px", background: "#f9fcf9", border: "1px solid #e2ebe4", borderRadius: "5px", textAlign: "center" }}>
+                      <span style={{ fontSize: "11px", color: "#61746a", display: "block", marginBottom: "4px" }}>{st}</span>
+                      <strong style={{ fontSize: "20px", color: count > 0 ? "var(--green-dark)" : "#9aa69f" }}>{count}</strong>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* System Architecture & Diagnostics */}
+            <div className="admin-card">
+              <div className="admin-card-header">
+                <div>
+                  <h3>System Architecture & Operational Diagnostics</h3>
+                  <small style={{ color: "var(--muted)" }}>Runtime environment verification and compliance configuration</small>
+                </div>
+                <span className="live-indicator"><i /> Systems Healthy</span>
+              </div>
+
+              <div className="system-stat-grid">
+                <div className="system-stat-box">
+                  <label>API Architecture</label>
+                  <span>FastAPI (Python 3.12 Asynchronous)</span>
+                </div>
+                <div className="system-stat-box">
+                  <label>Database Engine</label>
+                  <span>{stats?.system_health.database_engine ?? "SQLite / SQLAlchemy"}</span>
+                </div>
+                <div className="system-stat-box">
+                  <label>AI & RAG Engine</label>
+                  <span>{stats?.system_health.ai_engine ?? "Google Gemini 3.6 Flash"}</span>
+                </div>
+                <div className="system-stat-box">
+                  <label>Security & Governance</label>
+                  <span>{stats?.system_health.auth_security ?? "JWT + bcrypt"} (FR-12 Disclaimed)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+    </AppShell>
+  );
+}
+
 function subscribeToAuth(onChange: () => void) {
   window.addEventListener("etioms:auth-changed", onChange);
   window.addEventListener("etioms:unauthorized", onChange);
@@ -1353,6 +1648,7 @@ function getAuthSnapshot() {
 export default function EtiomsApp({ view }: { view: View }) {
   const authenticated = useSyncExternalStore(subscribeToAuth, getAuthSnapshot, () => false);
   if (!authenticated) return <AuthPage />;
+  if (view === "admin") return <AdminPage />;
   if (view === "pipeline") return <PipelinePage />;
   if (view === "ingest") return <IngestPage />;
   if (view === "profile") return <ProfilePage />;

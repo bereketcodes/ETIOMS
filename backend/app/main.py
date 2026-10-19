@@ -11,7 +11,7 @@ from backend.app.models.users import User
 from backend.app.models.tender_matches import TenderMatch
 from backend.app.models.opportunity import OpportunityTracking
 from backend.app.models.notification import Notification
-from backend.app.routers import auth, tenders, profile, intelligence, opportunities, notifications
+from backend.app.routers import auth, tenders, profile, intelligence, opportunities, notifications, admin
 
 # Initialize database schema
 Base.metadata.create_all(bind=engine)
@@ -43,6 +43,7 @@ app.include_router(profile.router)
 app.include_router(intelligence.router)
 app.include_router(opportunities.router)
 app.include_router(notifications.router)
+app.include_router(admin.router)
 
 
 @app.get("/health", tags=["System"])

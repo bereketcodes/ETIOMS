@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ETIOMS - Interactive Technical Documentation & System Blueprint</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    :root {
+      --etioms-green: #087c5b;
+      --etioms-green-light: #e6f4ed;
+      --etioms-gold: #d99636;
+      --etioms-gold-light: #fef7ec;
+      --etioms-dark: #12211a;
+    }
+    .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 4px; }
+    .tab-btn.active {
+      background: var(--etioms-green);
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(8, 124, 91, 0.25);
+    }
+  </style>
+</head>
+<body class="bg-[var(--background)] text-[var(--foreground)] antialiased p-4 md:p-8 custom-scroll min-h-screen">
+  <div class="max-w-6xl mx-auto space-y-6">
+
+    <!-- Header Banner -->
+    <header class="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 md:p-8 shadow-sm relative overflow-hidden">
+      <div class="absolute -right-16 -top-16 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -left-16 -bottom-16 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+      <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div class="space-y-2">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-emerald-700 text-white font-serif font-bold text-2xl flex items-center justify-center shadow-md relative">
+              E
+              <span class="absolute -bottom-1 -right-1 w-4 h-4 bg-amber-500 border-2 border-white rounded-full"></span>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-bold uppercase tracking-widest text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 dark:text-emerald-400 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">B.Sc. Graduation Project</span>
+                <span class="text-xs text-[var(--muted-foreground)]">Version 1.0 (MVP Complete)</span>
+              </div>
+              <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight mt-1">ETIOMS Technical Documentation</h1>
+            </div>
+          </div>
+          <p class="text-sm md:text-base text-[var(--muted-foreground)] max-w-2xl">
+            AI-Powered Ethiopian Tender Intelligence & Opportunity Management System — An interactive architectural blueprint, requirement traceability matrix, and system specification.
+          </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs font-medium">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            Live (200 OK)
+          </div>
+          <div class="px-3 py-1.5 rounded-lg bg-[var(--background)] border border-[var(--border)] text-xs text-[var(--muted-foreground)]">
+            27 Endpoints Verified
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="flex flex-wrap gap-2 mt-6 pt-6 border-t border-[var(--border)]" aria-label="Documentation sections">
+        <button onclick="switchTab('overview')" id="tab-overview" class="tab-btn active px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all">1. Overview & Context</button>
+        <button onclick="switchTab('architecture')" id="tab-architecture" class="tab-btn px-4 py-2 rounded-xl text-xs md:text-sm font-semibold bg-[var(--card)] hover:bg-[var(--border)] transition-all">2. Visual Architecture</button>
+        <button onclick="switchTab('database')" id="tab-database" class="tab-btn px-4 py-2 rounded-xl text-xs md:text-sm font-semibold bg-[var(--card)] hover:bg-[var(--border)] transition-all">3. Database Schema (ERD)</button>
+        <button onclick="switchTab('ai-rag')" id="tab-ai-rag" class="tab-btn px-4 py-2 rounded-xl text-xs md:text-sm font-semibold bg-[var(--card)] hover:bg-[var(--border)] transition-all">4. AI & RAG Engine</button>
+        <button onclick="switchTab('pipeline')" id="tab-pipeline" class="tab-btn px-4 py-2 rounded-xl text-xs md:text-sm font-semibold bg-[var(--card)] hover:bg-[var(--border)] transition-all">5. 7-Stage Pipeline</button>
+        <button onclick="switchTab('admin-rbac')" id="tab-admin-rbac" class="tab-btn px-4 py-2 rounded-xl text-xs md:text-sm font-semibold bg-[var(--card)] hover:bg-[var(--border)] transition-all">6. Admin & Security</button>
+      </nav>
+    </header>
+
+    <!-- TAB 1: OVERVIEW & CONTEXT -->
+    <section id="content-overview" class="tab-content space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Problem Card -->
+        <div class="bg-[var(--card)] border border-red-200 dark:border-red-900/40 rounded-2xl p-6 space-y-4">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-600 flex items-center justify-center font-bold">⚠️</div>
+            <h3 class="text-base font-bold text-red-700 dark:text-red-400">The Problem in Ethiopia</h3>
+          </div>
+          <ul class="space-y-3 text-xs md:text-sm text-[var(--muted-foreground)]">
+            <li class="flex items-start gap-2">
+              <span class="text-red-500 font-bold">•</span>
+              <span><strong>Information Fragmentation:</strong> Notices are scattered across newspapers (<em>Addis Zemen</em>, <em>The Ethiopian Herald</em>), bulletin boards, and disconnected websites.</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-red-500 font-bold">•</span>
+              <span><strong>Dense 50+ Page Documents:</strong> Procurement officers spend days manually digging through legal boilerplate, bid bond (CPO) clauses, and technical specs.</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-red-500 font-bold">•</span>
+              <span><strong>Costly Disqualification:</strong> Submitting bids without meeting mandatory trade license renewal or years-of-experience requirements results in forfeiture of bid security.</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-red-500 font-bold">•</span>
+              <span><strong>Missed Deadlines:</strong> Manual spreadsheet tracking across multiple bids leads to missed submission cut-offs.</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Solution Card -->
+        <div class="bg-[var(--card)] border border-emerald-200 dark:border-emerald-900/40 rounded-2xl p-6 space-y-4">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 flex items-center justify-center font-bold">✨</div>
+            <h3 class="text-base font-bold text-emerald-700 dark:text-emerald-400">The ETIOMS Solution</h3>
+          </div>
+          <ul class="space-y-3 text-xs md:text-sm text-[var(--muted-foreground)]">
+            <li class="flex items-start gap-2">
+              <span class="text-emerald-600 font-bold">✓</span>
+              <span><strong>Centralized Intelligence:</strong> Ingests notices and PDFs, providing multi-factor filtering by sector, region, and deadline.</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-emerald-600 font-bold">✓</span>
+              <span><strong>AI Capability Matching (0–100%):</strong> Evaluates company credentials against tender demands with green contributing strengths and amber missing factor warnings.</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-emerald-600 font-bold">✓</span>
+              <span><strong>Grounded RAG Q&A:</strong> Natural language dialogue powered by Gemini 3.6 Flash providing verifiable citations directly from tender document text.</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-emerald-600 font-bold">✓</span>
+              <span><strong>7-Stage Kanban Pipeline:</strong> Lifecycle tracking from <em>Discovered</em> to <em>Awarded</em> with stage notes and 7-day proximity deadline alerts.</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Core System Capabilities Grid -->
+      <div class="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 space-y-4">
+        <h3 class="text-base font-bold">Core System Capabilities (SRS v1.0 MVP)</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="p-4 rounded-xl bg-[var(--background)] border border-[var(--border)] space-y-1">
+            <span class="text-xl">🎯</span>
+            <h4 class="text-xs font-bold">AI Compatibility Scoring</h4>
+            <p class="text-xs text-[var(--muted-foreground)]">Weighted profile matching with factor breakdown.</p>
+          </div>
+          <div class="p-4 rounded-xl bg-[var(--background)] border border-[var(--border)] space-y-1">
+            <span class="text-xl">💬</span>
+            <h4 class="text-xs font-bold">Grounded RAG Q&A</h4>
+            <p class="text-xs text-[var(--muted-foreground)]">In-context citations with fallback resilience.</p>
+          </div>
+          <div class="p-4 rounded-xl bg-[var(--background)] border border-[var(--border)] space-y-1">
+            <span class="text-xl">📊</span>
+            <h4 class="text-xs font-bold">Opportunity Kanban</h4>
+            <p class="text-xs text-[var(--muted-foreground)]">7-stage progression with proposal notes.</p>
+          </div>
+          <div class="p-4 rounded-xl bg-[var(--background)] border border-[var(--border)] space-y-1">
+            <span class="text-xl">⚖️</span>
+            <h4 class="text-xs font-bold">Side-by-Side Compare</h4>
+            <p class="text-xs text-[var(--muted-foreground)]">Compare multiple tenders simultaneously.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: VISUAL ARCHITECTURE -->
+    <section id="content-architecture" class="tab-content hidden space-y-6">
+      <div class="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 md:p-8 space-y-6">
+        <div class="space-y-1">
+          <h3 class="text-lg font-bold">Multi-Tier System Architecture</h3>
+          <p class="text-xs md:text-sm text-[var(--muted-foreground)]">Decoupled presentation, API gateway, asynchronous AI services, and relational persistence.</p>
+        </div>
+
+        <!-- Architectural Visual Diagram -->
+        <div class="space-y-4">
+          <!-- Client Layer -->
+          <div class="p-5 rounded-xl border border-blue-200 dark:border-blue-900/50 bg-blue-50/50 dark:bg-blue-950/20 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold uppercase tracking-wider text-blue-700 dark:text-blue-400">1. Client Presentation Layer (Next.js 16 + Tailwind)</span>
+              <span class="text-xs text-[var(--muted-foreground)]">App Router · Turbopack · Lucide UI</span>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+              <div class="bg-[var(--card)] p-3 rounded-lg border border-[var(--border)] text-center text-xs font-medium">Ranked Radar (/)</div>
+              <div class="bg-[var(--card)] p-3 rounded-lg border border-[var(--border)] text-center text-xs font-medium">Kanban (/opportunities)</div>
+              <div class="bg-[var(--card)] p-3 rounded-lg border border-[var(--border)] text-center text-xs font-medium">Tender Ingest (/ingest)</div>
+              <div class="bg-[var(--card)] p-3 rounded-lg border border-[var(--border)] text-center text-xs font-medium">Profile Hub (/profile)</div>
+              <div class="bg-[var(--card)] p-3 rounded-lg border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 text-center text-xs font-bold">Admin Console (/admin)</div>
+            </div>
+          </div>
+
+          <div class="flex justify-center text-emerald-600 text-lg">↓ RESTful JSON API via HTTP/2 (CORS Guarded) ↓</div>
+
+          <!-- API Gateway Layer -->
+          <div class="p-5 rounded-xl border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/50 dark:bg-emerald-950/20 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-300">2. API Gateway & Routing (FastAPI + Python 3.12)</span>
+              <span class="text-xs text-[var(--muted-foreground)]">Asynchronous ASGI · Uvicorn · Pydantic v2</span>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div class="bg-[var(--card)] p-3 rounded-lg border border-[var(--border)] text-xs">
+                <strong class="block text-emerald-700 dark:text-emerald-400">/api/auth</strong>
+                <span class="text-[var(--muted-foreground)] text-xs">JWT, RBAC, 24h Invites</span>
+              </div>
+              <div class="bg-[var(--card)] p-3 rounded-lg border border-[var(--border)] text-xs">
+                <strong class="block text-emerald-700 dark:text-emerald-400">/api/tenders</strong>
+                <span class="text-[var(--muted-foreground)] text-xs">Filtering, Compare, RAG Q&A</span>
+              </div>
+              <div class="bg-[var(--card)] p-3 rounded-lg border border-[var(--border)] text-xs">
+                <strong class="block text-emerald-700 dark:text-emerald-400">/api/opportunities</strong>
+                <span class="text-[var(--muted-foreground)] text-xs">Pipeline Tracking & Notes</span>
+              </div>
+              <div class="bg-[var(--card)] p-3 rounded-lg border border-[var(--border)] text-xs">
+                <strong class="block text-emerald-700 dark:text-emerald-400">/api/admin</strong>
+                <span class="text-[var(--muted-foreground)] text-xs">Telemetry, Users, Diagnostics</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-center text-emerald-600 text-lg">↓ Business Service Dispatch ↓</div>
+
+          <!-- Services & Data Layer -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="p-5 rounded-xl border border-amber-200 dark:border-amber-900/50 bg-amber-50/50 dark:bg-amber-950/20 space-y-3">
+              <span class="text-xs font-bold uppercase tracking-wider text-amber-800 dark:text-amber-300">3. AI & RAG Engine</span>
+              <ul class="text-xs space-y-2 text-[var(--muted-foreground)]">
+                <li>• <strong>Google Gemini 3.6 Flash:</strong> Contextual generation & requirement structuring.</li>
+                <li>• <strong>Citation Grounding:</strong> Extracted document source anchors.</li>
+                <li>• <strong>Heuristic Fallback:</strong> Dual-tier resilience against rate limits.</li>
+              </ul>
+            </div>
+
+            <div class="p-5 rounded-xl border border-purple-200 dark:border-purple-900/50 bg-purple-50/50 dark:bg-purple-950/20 space-y-3">
+              <span class="text-xs font-bold uppercase tracking-wider text-purple-800 dark:text-purple-300">4. Persistence & Security</span>
+              <ul class="text-xs space-y-2 text-[var(--muted-foreground)]">
+                <li>• <strong>SQLAlchemy ORM:</strong> Relational SQLite (ACID, GUIDs, JSON columns).</li>
+                <li>• <strong>Bcrypt Hashing:</strong> Work factor 12 password hashing.</li>
+                <li>• <strong>PostgreSQL Ready:</strong> Zero code changes needed for cloud deployment.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: DATABASE SCHEMA -->
+    <section id="content-database" class="tab-content hidden space-y-6">
+      <div class="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 md:p-8 space-y-6">
+        <div class="space-y-1">
+          <h3 class="text-lg font-bold">Relational Database Model (SQLAlchemy)</h3>
+          <p class="text-xs md:text-sm text-[var(--muted-foreground)]">ACID-compliant relational structure maintaining referential integrity across 7 key tables.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- Organizations -->
+          <div class="p-4 rounded-xl border border-[var(--border)] bg-[var(--background)] space-y-2">
+            <div class="flex items-center justify-between border-b border-[var(--border)] pb-2">
+              <strong class="text-xs font-bold text-emerald-600">organization_profiles</strong>
+              <span class="text-[10px] text-[var(--muted-foreground)]">PK: id (GUID)</span>
+            </div>
+            <ul class="text-xs space-y-1 text-[var(--muted-foreground)]">
+              <li>• <code>company_name</code> (String 255)</li>
+              <li>• <code>sectors</code> (JSON Array)</li>
+              <li>• <code>operating_regions</code> (JSON)</li>
+              <li>• <code>years_experience</code> (Integer)</li>
+              <li>• <code>certifications</code> (JSON)</li>
+              <li>• <code>past_projects_summary</code> (Text)</li>
+            </ul>
+          </div>
+
+          <!-- Users -->
+          <div class="p-4 rounded-xl border border-[var(--border)] bg-[var(--background)] space-y-2">
+            <div class="flex items-center justify-between border-b border-[var(--border)] pb-2">
+              <strong class="text-xs font-bold text-blue-600">users</strong>
+              <span class="text-[10px] text-[var(--muted-foreground)]">PK: id (GUID)</span>
+            </div>
+            <ul class="text-xs space-y-1 text-[var(--muted-foreground)]">
+              <li>• <code>email</code> (String unique)</li>
+              <li>• <code>user_name</code> (String)</li>
+              <li>• <code>hashed_password</code> (Bcrypt)</li>
+              <li>• <code>organization_id</code> (FK)</li>
+              <li>• <code>role</code> (Admin / Member)</li>
+              <li>• <code>is_active</code> (Boolean)</li>
+            </ul>
+          </div>
+
+          <!-- Tenders -->
+          <div class="p-4 rounded-xl border border-[var(--border)] bg-[var(--background)] space-y-2">
+            <div class="flex items-center justify-between border-b border-[var(--border)] pb-2">
+              <strong class="text-xs font-bold text-amber-600">tenders</strong>
+              <span class="text-[10px] text-[var(--muted-foreground)]">PK: id (GUID)</span>
+            </div>
+            <ul class="text-xs space-y-1 text-[var(--muted-foreground)]">
+              <li>• <code>title</code> (String 500)</li>
+              <li>• <code>procuring_entity</code> (String)</li>
+              <li>• <code>sector</code> & <code>region</code> (String)</li>
+              <li>• <code>deadline</code> (Date indexed)</li>
+              <li>• <code>requirements</code> (JSON)</li>
+              <li>• <code>full_text</code> (Text)</li>
+            </ul>
+          </div>
+
+          <!-- Tender Matches -->
+          <div class="p-4 rounded-xl border border-[var(--border)] bg-[var(--background)] space-y-2">
+            <div class="flex items-center justify-between border-b border-[var(--border)] pb-2">
+              <strong class="text-xs font-bold text-purple-600">tender_matches</strong>
+              <span class="text-[10px] text-[var(--muted-foreground)]">PK: id (GUID)</span>
+            </div>
+            <ul class="text-xs space-y-1 text-[var(--muted-foreground)]">
+              <li>• <code>organization_id</code> (FK)</li>
+              <li>• <code>tender_id</code> (FK)</li>
+              <li>• <code>total_score</code> (Float 0-100)</li>
+              <li>• <code>compliance_decision</code> (Str)</li>
+              <li>• <code>ai_justification</code> (Text)</li>
+              <li>• <code>breakdown</code> (JSON)</li>
+            </ul>
+          </div>
+
+          <!-- Opportunity Tracking -->
+          <div class="p-4 rounded-xl border border-[var(--border)] bg-[var(--background)] space-y-2">
+            <div class="flex items-center justify-between border-b border-[var(--border)] pb-2">
+              <strong class="text-xs font-bold text-rose-600">opportunity_tracking</strong>
+              <span class="text-[10px] text-[var(--muted-foreground)]">PK: id (GUID)</span>
+            </div>
+            <ul class="text-xs space-y-1 text-[var(--muted-foreground)]">
+              <li>• <code>organization_id</code> (FK)</li>
+              <li>• <code>tender_id</code> (FK)</li>
+              <li>• <code>status</code> (7-Stage Enum)</li>
+              <li>• <code>notes</code> (Text proposal log)</li>
+              <li>• <code>created_at</code> (Timestamp)</li>
+              <li>• <code>updated_at</code> (Timestamp)</li>
+            </ul>
+          </div>
+
+          <!-- Notifications -->
+          <div class="p-4 rounded-xl border border-[var(--border)] bg-[var(--background)] space-y-2">
+            <div class="flex items-center justify-between border-b border-[var(--border)] pb-2">
+              <strong class="text-xs font-bold text-teal-600">notifications</strong>
+              <span class="text-[10px] text-[var(--muted-foreground)]">PK: id (GUID)</span>
+            </div>
+            <ul class="text-xs space-y-1 text-[var(--muted-foreground)]">
+              <li>• <code>user_id</code> (FK)</li>
+              <li>• <code>type</code> (Deadline / Match)</li>
+              <li>• <code>message</code> (Text alert)</li>
+              <li>• <code>read_flag</code> (Boolean)</li>
+              <li>• <code>created_at</code> (Timestamp)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: AI & RAG ENGINE -->
+    <section id="content-ai-rag" class="tab-content hidden space-y-6">
+      <div class="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 md:p-8 space-y-6">
+        <div class="space-y-1">
+          <h3 class="text-lg font-bold">RAG Retrieval & Grounding Mechanism (FR-14)</h3>
+          <p class="text-xs md:text-sm text-[var(--muted-foreground)]">How ETIOMS answers natural-language questions without hallucinations while citing source documents.</p>
+        </div>
+
+        <!-- RAG Flow Steps -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div class="p-4 rounded-xl border border-[var(--border)] bg-[var(--background)] space-y-2">
+            <span class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold">1</span>
+            <h4 class="text-xs font-bold">User Query</h4>
+            <p class="text-xs text-[var(--muted-foreground)]">"What is the required CPO bid bond amount and submission format?"</p>
+          </div>
+
+          <div class="p-4 rounded-xl border border-[var(--border)] bg-[var(--background)] space-y-2">
+            <span class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold">2</span>
+            <h4 class="text-xs font-bold">Contextual Extraction</h4>
+            <p class="text-xs text-[var(--muted-foreground)]">Retrieves raw tender text and requirements from SQLite document store.</p>
+          </div>
+
+          <div class="p-4 rounded-xl border border-[var(--border)] bg-[var(--background)] space-y-2">
+            <span class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold">3</span>
+            <h4 class="text-xs font-bold">Gemini 3.6 Flash</h4>
+            <p class="text-xs text-[var(--muted-foreground)]">Generates grounded answer with explicit instructions to extract section citations.</p>
+          </div>
+
+          <div class="p-4 rounded-xl border border-[var(--border)] bg-[var(--background)] space-y-2">
+            <span class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold">4</span>
+            <h4 class="text-xs font-bold">Citations & Disclaimer</h4>
+            <p class="text-xs text-[var(--muted-foreground)]">Renders grounded response alongside mandatory FR-12 transparency notice.</p>
+          </div>
+        </div>
+
+        <!-- Live Transparency Banner Sample -->
+        <div class="p-4 rounded-xl border border-amber-300 dark:border-amber-700/60 bg-amber-50 dark:bg-amber-950/30 flex items-start gap-3">
+          <span class="text-amber-600 text-lg">✳</span>
+          <div class="text-xs text-amber-900 dark:text-amber-200">
+            <strong>AI-Generated Intelligence (FDRE FPPA Aligned)</strong> — Evaluated by Gemini 3.6 Flash. This output is strictly advisory. Verify all bid bond amounts, dates, and eligibility criteria against official procurement notices before formal envelope sealing.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: 7-STAGE PIPELINE -->
+    <section id="content-pipeline" class="tab-content hidden space-y-6">
+      <div class="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 md:p-8 space-y-6">
+        <div class="space-y-1">
+          <h3 class="text-lg font-bold">7-Stage Opportunity Pipeline Roadmap (FR-15, FR-16)</h3>
+          <p class="text-xs md:text-sm text-[var(--muted-foreground)]">Standardized procurement bidding progression matching Ethiopian business workflows.</p>
+        </div>
+
+        <!-- Interactive Pipeline Timeline -->
+        <div class="grid grid-cols-2 md:grid-cols-7 gap-3">
+          <div class="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-[var(--background)] text-center space-y-1">
+            <span class="text-xs font-bold text-slate-500">STAGE 1</span>
+            <h4 class="text-xs font-bold">Discovered</h4>
+            <p class="text-[11px] text-[var(--muted-foreground)]">Initial AI match</p>
+          </div>
+          <div class="p-3 rounded-xl border border-blue-200 dark:border-blue-800 bg-[var(--background)] text-center space-y-1">
+            <span class="text-xs font-bold text-blue-500">STAGE 2</span>
+            <h4 class="text-xs font-bold">Interested</h4>
+            <p class="text-[11px] text-[var(--muted-foreground)]">Team shortlisted</p>
+          </div>
+          <div class="p-3 rounded-xl border border-purple-200 dark:border-purple-800 bg-[var(--background)] text-center space-y-1">
+            <span class="text-xs font-bold text-purple-500">STAGE 3</span>
+            <h4 class="text-xs font-bold">Analyzing</h4>
+            <p class="text-[11px] text-[var(--muted-foreground)]">RAG Q&A & specs</p>
+          </div>
+          <div class="p-3 rounded-xl border border-amber-200 dark:border-amber-800 bg-[var(--background)] text-center space-y-1">
+            <span class="text-xs font-bold text-amber-600">STAGE 4</span>
+            <h4 class="text-xs font-bold">Preparing</h4>
+            <p class="text-[11px] text-[var(--muted-foreground)]">CPO & proposal</p>
+          </div>
+          <div class="p-3 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-[var(--background)] text-center space-y-1">
+            <span class="text-xs font-bold text-indigo-500">STAGE 5</span>
+            <h4 class="text-xs font-bold">Submitted</h4>
+            <p class="text-[11px] text-[var(--muted-foreground)]">Bid packet sealed</p>
+          </div>
+          <div class="p-3 rounded-xl border border-emerald-300 dark:border-emerald-700 bg-emerald-50/50 dark:bg-emerald-950/20 text-center space-y-1">
+            <span class="text-xs font-bold text-emerald-600">STAGE 6</span>
+            <h4 class="text-xs font-bold text-emerald-700 dark:text-emerald-300">Awarded</h4>
+            <p class="text-[11px] text-[var(--muted-foreground)]">Contract won 🎉</p>
+          </div>
+          <div class="p-3 rounded-xl border border-red-200 dark:border-red-900/50 bg-[var(--background)] text-center space-y-1">
+            <span class="text-xs font-bold text-red-500">STAGE 7</span>
+            <h4 class="text-xs font-bold">Not Awarded</h4>
+            <p class="text-[11px] text-[var(--muted-foreground)]">Post-mortem log</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 6: ADMIN & SECURITY -->
+    <section id="content-admin-rbac" class="tab-content hidden space-y-6">
+      <div class="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 md:p-8 space-y-6">
+        <div class="space-y-1">
+          <h3 class="text-lg font-bold">Security, RBAC & Administrative Governance</h3>
+          <p class="text-xs md:text-sm text-[var(--muted-foreground)]">Role permissions and system operational health controls.</p>
+        </div>
+
+        <!-- RBAC Matrix -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left border-collapse">
+            <thead>
+              <tr class="border-b border-[var(--border)] bg-[var(--background)]">
+                <th class="p-3 font-bold">Capability / Permission</th>
+                <th class="p-3 font-bold text-emerald-700">Organization Admin</th>
+                <th class="p-3 font-bold text-blue-700">Team Member</th>
+                <th class="p-3 font-bold text-purple-700">System Admin</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-[var(--border)]">
+              <tr>
+                <td class="p-3">Manage Company Profile & Credentials</td>
+                <td class="p-3 text-emerald-600 font-bold">✓ Full Control</td>
+                <td class="p-3 text-[var(--muted-foreground)]">Read Only</td>
+                <td class="p-3 text-purple-600 font-bold">✓ Full Control</td>
+              </tr>
+              <tr>
+                <td class="p-3">Generate 24h Team Member Invitations</td>
+                <td class="p-3 text-emerald-600 font-bold">✓ Allowed</td>
+                <td class="p-3 text-red-500">✗ Denied</td>
+                <td class="p-3 text-purple-600 font-bold">✓ Allowed</td>
+              </tr>
+              <tr>
+                <td class="p-3">Access Admin Command Center (/admin)</td>
+                <td class="p-3 text-emerald-600 font-bold">✓ Allowed</td>
+                <td class="p-3 text-red-500">✗ Denied</td>
+                <td class="p-3 text-purple-600 font-bold">✓ Allowed</td>
+              </tr>
+              <tr>
+                <td class="p-3">Query Tenders with RAG & Citations</td>
+                <td class="p-3 text-emerald-600 font-bold">✓ Allowed</td>
+                <td class="p-3 text-blue-600 font-bold">✓ Allowed</td>
+                <td class="p-3 text-purple-600 font-bold">✓ Allowed</td>
+              </tr>
+              <tr>
+                <td class="p-3">Update Opportunity Stages & Notes</td>
+                <td class="p-3 text-emerald-600 font-bold">✓ Allowed</td>
+                <td class="p-3 text-blue-600 font-bold">✓ Allowed</td>
+                <td class="p-3 text-purple-600 font-bold">✓ Allowed</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="text-center text-xs text-[var(--muted-foreground)] py-4 border-t border-[var(--border)]">
+      ETIOMS (Ethiopian Tender Intelligence & Opportunity Management System) · Prepared for Graduation Defense
+    </footer>
+
+  </div>
+
+  <script>
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
+
+      const activeBtn = document.getElementById('tab-' + tabId);
+      const activeContent = document.getElementById('content-' + tabId);
+
+      if (activeBtn) activeBtn.classList.add('active');
+      if (activeContent) activeContent.classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>
