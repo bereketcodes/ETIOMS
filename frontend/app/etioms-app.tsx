@@ -92,6 +92,7 @@ type UserMe = {
   user_name: string;
   organization_id: string;
   role: string;
+  company_name?: string;
 };
 
 type RAGResult = {
@@ -279,9 +280,11 @@ function AppShell({ view, children }: { view: View; children: React.ReactNode })
           <Link className="company-chip" href="/profile">
             <span className="company-avatar">{currentUser?.user_name?.[0] || "A"}</span>
             <span>
-              {currentUser?.user_name || "Account"}
-              <small style={{ display: "block", fontSize: "9px", color: "var(--green)" }}>
-                {currentUser?.role || "Business User"}
+              <strong style={{ display: "block", fontSize: "12px", color: "var(--ink)", lineHeight: 1.2 }}>
+                {currentUser?.user_name || "Account"}
+              </strong>
+              <small style={{ display: "block", fontSize: "10px", color: "var(--green-dark)", fontWeight: "700" }}>
+                {currentUser?.role || "Business User"}{currentUser?.company_name ? ` · ${currentUser.company_name}` : ""}
               </small>
             </span>
             <span className="chip-arrow">↗</span>

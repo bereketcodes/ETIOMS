@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ETIOMS - Graduation Project Documentation</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+
+        :root {
+            --navy: #0a192f;
+            --teal: #14b8a6;
+            --gray-light: #f3f4f6;
+            --gray-text: #4b5563;
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: #111827;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: var(--white);
+        }
+
+        /* Print Specifics */
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
+
+        .page-break {
+            page-break-before: always;
+        }
+
+        /* Cover Page */
+        .cover {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background-color: var(--navy);
+            color: var(--white);
+            padding: 40px;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        .cover::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(135deg, rgba(20,184,166,0.1) 0%, rgba(10,25,47,0) 100%);
+            pointer-events: none;
+        }
+
+        .cover-title {
+            font-size: 4rem;
+            font-weight: 700;
+            color: var(--teal);
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+
+        .cover-subtitle {
+            font-size: 1.8rem;
+            font-weight: 300;
+            margin-bottom: 30px;
+            max-width: 800px;
+        }
+
+        .cover-tagline {
+            font-size: 1.2rem;
+            color: var(--gray-light);
+            margin-bottom: 60px;
+            font-style: italic;
+        }
+
+        .cover-meta {
+            margin-top: auto;
+            text-align: center;
+            border-top: 1px solid rgba(255,255,255,0.2);
+            padding-top: 20px;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .cover-meta p {
+            margin: 5px 0;
+            font-size: 1rem;
+            color: #cbd5e1;
+        }
+
+        /* Document Structure */
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        h1, h2, h3, h4 {
+            color: var(--navy);
+            margin-top: 2em;
+            margin-bottom: 0.5em;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            border-bottom: 2px solid var(--teal);
+            padding-bottom: 10px;
+        }
+
+        h2 {
+            font-size: 1.6rem;
+            color: var(--teal);
+        }
+
+        h3 {
+            font-size: 1.3rem;
+        }
+
+        p, li {
+            font-size: 11pt;
+            color: var(--gray-text);
+        }
+
+        a {
+            color: var(--teal);
+            text-decoration: none;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            font-size: 10.5pt;
+        }
+
+        th, td {
+            border: 1px solid #e5e7eb;
+            padding: 12px 15px;
+            text-align: left;
+        }
+
+        th {
+            background-color: var(--navy);
+            color: var(--white);
+            font-weight: 600;
+        }
+
+        tr:nth-child(even) {
+            background-color: var(--gray-light);
+        }
+
+        /* Code & Preformatted */
+        pre {
+            background-color: var(--gray-light);
+            border-left: 4px solid var(--teal);
+            padding: 15px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 10pt;
+            overflow-x: auto;
+            color: var(--navy);
+        }
+
+        code {
+            background-color: var(--gray-light);
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 10pt;
+        }
+
+        /* TOC */
+        .toc-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        .toc-list li {
+            margin-bottom: 10px;
+        }
+
+        .toc-list a {
+            color: var(--navy);
+            font-weight: 600;
+        }
+
+        .toc-sublist {
+            list-style-type: none;
+            padding-left: 20px;
+            margin-top: 5px;
+        }
+
+        .toc-sublist a {
+            font-weight: 400;
+            color: var(--gray-text);
+        }
+
+        /* Diagrams/Figures */
+        .figure {
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .figure svg {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #e5e7eb;
+            background-color: #fafafa;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .caption {
+            font-size: 9.5pt;
+            color: #6b7280;
+            margin-top: 10px;
+            font-style: italic;
+        }
+
+        /* Blockquotes / Notes */
+        blockquote {
+            border-left: 4px solid var(--teal);
+            background-color: #f0fdfa;
+            margin: 20px 0;
+            padding: 15px 20px;
+            color: var(--navy);
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Cover Page -->
+    <div class="cover">
+        <div class="cover-title">ETIOMS</div>
+        <div class="cover-subtitle">AI-Powered Ethiopian Tender Intelligence and Opportunity Management System</div>
+        <div class="cover-tagline">Centralizing, Analyzing, and Securing Procurement Opportunities for Ethiopian Enterprises</div>
+        
+        <div class="cover-meta">
+            <p><strong>Author:</strong> Bereket</p>
+            <p><strong>Course / Instructor:</strong> [Placeholder: Course / Instructor Name]</p>
+            <p><strong>Academic Year:</strong> [Placeholder: Academic Year]</p>
+            <p><strong>Submission Date:</strong> 19 October 2026</p>
+            <p><strong>Repository:</strong> github.com/bereketcodes/ETIOMS (branch finish-mvp, commit 2f81434)</p>
+        </div>
+    </div>
+
+    <!-- Table of Contents -->
+    <div class="page-break"></div>
+    <div class="container">
+        <h1>Table of Contents</h1>
+        <ul class="toc-list">
+            <li><a href="#summary">1. Executive Summary & Problem Statement</a></li>
+            <li><a href="#architecture">2. System Architecture and Technology Stack</a></li>
+            <li><a href="#data-model">3. Database Design</a></li>
+            <li><a href="#core-logic">4. Core Logic & AI Workflows</a></li>
+            <li><a href="#api-reference">5. API Reference</a></li>
+            <li><a href="#frontend">6. Frontend Architecture</a></li>
+            <li><a href="#setup">7. System Implementation & Setup</a></li>
+            <li><a href="#testing">8. Testing and Evaluation</a></li>
+            <li><a href="#limitations">9. Limitations and Future Work</a></li>
+        </ul>
+    </div>
+
+    <!-- 1. Project Summary -->
+    <div class="page-break"></div>
+    <div class="container">
+        <h1 id="summary">1. Executive Summary & Problem Statement</h1>
+        <p>ETIOMS is a full-stack web application designed to empower Ethiopian companies in discovering, qualifying, and tracking procurement tenders. By allowing companies to register detailed business profiles (sectors, regions, experience, certifications), the system leverages AI to score tenders against these profiles, conduct preliminary compliance audits, answer contextual questions from tender text, and manage the complete bid lifecycle.</p>
+
+        <h2>1.1 Problem Statement</h2>
+        <ul>
+            <li><strong>Fragmentation:</strong> Tenders are scattered across newspapers, disparate web portals, and physical notice boards, resulting in no centralized search repository.</li>
+            <li><strong>Complex Compliance:</strong> Tender documents are extensive and laden with strict eligibility rules (e.g., trade licenses, tax clearance, VAT/TIN registration, bid security). Missing a single mandatory document results in immediate disqualification, often after non-refundable bid bonds have been paid.</li>
+            <li><strong>Manual Tracking:</strong> Deadlines and opportunity pipelines are tracked manually, increasing the risk of missed submissions.</li>
+        </ul>
+
+        <h2>1.2 System Capabilities</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Capability</th>
+                    <th>Summary</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Tender Ingestion</strong></td>
+                    <td>Upload a PDF/TXT or paste a notice. Gemini extracts title, entity, sector, region, deadline, budget, requirements, and generates a structured summary.</td>
+                </tr>
+                <tr>
+                    <td><strong>Search and Filtering</strong></td>
+                    <td>API filters by sector, region, status, keyword, and days-until-deadline. Dashboard provides keyword, sector, and minimum-score filters.</td>
+                </tr>
+                <tr>
+                    <td><strong>Match Scoring</strong></td>
+                    <td>0–100 score per tender based on the user's profile: 70 points rule-based + 30 points AI semantic analysis, with a per-factor breakdown.</td>
+                </tr>
+                <tr>
+                    <td><strong>Compliance Audit</strong></td>
+                    <td>Cross-references the company’s certifications against mandatory documents, returning <em>BID</em>, <em>NO-BID</em>, or <em>CONDITIONAL</em> with disqualification risks.</td>
+                </tr>
+                <tr>
+                    <td><strong>Tender Q&A</strong></td>
+                    <td>Natural-language inquiries are answered exclusively from the tender’s text, featuring citations or an explicit "not available" safeguard.</td>
+                </tr>
+                <tr>
+                    <td><strong>Opportunity Pipeline</strong></td>
+                    <td>Tracks bids across seven stages: Discovered, Interested, Analyzing, Preparing, Submitted, Awarded, Not Awarded.</td>
+                </tr>
+                <tr>
+                    <td><strong>Comparison</strong></td>
+                    <td>Facilitates side-by-side analytical comparison of 2 to 5 targeted tenders.</td>
+                </tr>
+                <tr>
+                    <td><strong>Alerts</strong></td>
+                    <td>In-app notifications for open tenders closing within a 7-day window.</td>
+                </tr>
+                <tr>
+                    <td><strong>Teams and Admin</strong></td>
+                    <td>Supports organizational roles, single-use 24-hour invitation codes, and an administrative console featuring system statistics.</td>
+                </tr>
+            </tbody>
+        </table>
+        <blockquote>Note: All AI output is explicitly labeled in the user interface as advisory and must be verified against official tender notices.</blockquote>
+    </div>
+
+    <!-- 2. Architecture -->
+    <div class="page-break"></div>
+    <div class="container">
+        <h1 id="architecture">2. System Architecture and Technology Stack</h1>
+        <p>The ETIOMS platform operates on a decoupled client-server architecture utilizing Next.js for the frontend and FastAPI for the backend, supported by a relational database and Google Gemini for AI inference.</p>
+
+        <div class="figure">
+            <svg viewBox="0 0 800 350" xmlns="http://www.w3.org/2000/svg">
+                <!-- Browser -->
+                <rect x="50" y="125" width="160" height="80" rx="8" fill="#f3f4f6" stroke="#0a192f" stroke-width="2"/>
+                <text x="130" y="160" font-family="sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="#0a192f">Browser (Client)</text>
+                <text x="130" y="180" font-family="sans-serif" font-size="12" text-anchor="middle" fill="#4b5563">Next.js 16 + React 19</text>
+
+                <!-- Arrow 1 -->
+                <line x1="210" y1="165" x2="330" y2="165" stroke="#14b8a6" stroke-width="3" marker-end="url(#arrowhead)"/>
+                <text x="270" y="155" font-family="sans-serif" font-size="11" text-anchor="middle" fill="#4b5563">HTTP/JSON (JWT)</text>
+
+                <!-- FastAPI -->
+                <rect x="340" y="80" width="180" height="170" rx="8" fill="#f3f4f6" stroke="#0a192f" stroke-width="2"/>
+                <text x="430" y="110" font-family="sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="#0a192f">FastAPI Backend</text>
+                <text x="430" y="140" font-family="sans-serif" font-size="12" text-anchor="middle" fill="#4b5563">Routers & Services</text>
+                <text x="430" y="170" font-family="sans-serif" font-size="11" text-anchor="middle" fill="#4b5563">(Matching, Compliance,</text>
+                <text x="430" y="190" font-family="sans-serif" font-size="11" text-anchor="middle" fill="#4b5563">Q&A, Ingestion, RAG)</text>
+                <text x="430" y="230" font-family="sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="#0a192f">SQLAlchemy ORM</text>
+
+                <!-- Arrow 2 (to AI) -->
+                <line x1="520" y1="120" x2="630" y2="80" stroke="#14b8a6" stroke-width="3" marker-end="url(#arrowhead)"/>
+                
+                <!-- Arrow 3 (to DB) -->
+                <line x1="520" y1="210" x2="630" y2="250" stroke="#14b8a6" stroke-width="3" marker-end="url(#arrowhead)"/>
+
+                <!-- Gemini API -->
+                <rect x="640" y="40" width="140" height="70" rx="8" fill="#e0f2fe" stroke="#0369a1" stroke-width="2"/>
+                <text x="710" y="75" font-family="sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="#0369a1">Google Gemini</text>
+                <text x="710" y="95" font-family="sans-serif" font-size="11" text-anchor="middle" fill="#0369a1">AI Inference API</text>
+
+                <!-- Database -->
+                <rect x="640" y="220" width="140" height="70" rx="8" fill="#fce7f3" stroke="#be185d" stroke-width="2"/>
+                <text x="710" y="255" font-family="sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="#be185d">Database</text>
+                <text x="710" y="275" font-family="sans-serif" font-size="11" text-anchor="middle" fill="#be185d">SQLite / PostgreSQL</text>
+
+                <!-- Definitions -->
+                <defs>
+                    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" fill="#14b8a6" />
+                    </marker>
+                </defs>
+            </svg>
+            <div class="caption">Figure 1: ETIOMS High-Level System Architecture</div>
+        </div>
+
+        <h2>2.1 Technology Stack</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Layer</th>
+                    <th>Technology</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Frontend</strong></td>
+                    <td>Next.js 16.4, React 19.3, TypeScript, styling in <code>globals.css</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Backend</strong></td>
+                    <td>Python, FastAPI, Uvicorn, Pydantic v2</td>
+                </tr>
+                <tr>
+                    <td><strong>Database</strong></td>
+                    <td>SQLAlchemy 2 ORM. SQLite by default, PostgreSQL by setting <code>DATABASE_URL</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Authentication</strong></td>
+                    <td><code>python-jose</code> (JWT, HS256), <code>passlib</code> (PBKDF2-SHA256)</td>
+                </tr>
+                <tr>
+                    <td><strong>Documents</strong></td>
+                    <td><code>pypdf</code> for PDF text extraction</td>
+                </tr>
+                <tr>
+                    <td><strong>AI Integration</strong></td>
+                    <td>Google Gemini (<code>google-genai</code> SDK): <code>gemini-3.6-flash</code> for extraction, scoring, audit, Q&A, and proposals; <code>text-embedding-004</code> for embeddings</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 3. Data Model -->
+    <div class="page-break"></div>
+    <div class="container">
+        <h1 id="data-model">3. Database Design</h1>
+        <p>The system utilizes seven core tables created automatically at startup. Primary identifiers are UUIDs stored as <code>CHAR(36)</code>. Dependent rows are declared with <code>ON DELETE CASCADE</code>.</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Table Name</th>
+                    <th>Key Fields</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>organization_profiles</code></td>
+                    <td><code>id, company_name, sectors (JSON), operating_regions (JSON), years_experience, certifications (JSON), past_projects_summary</code></td>
+                    <td>One row per company; serves as the baseline profile utilized for tender scoring.</td>
+                </tr>
+                <tr>
+                    <td><code>users</code></td>
+                    <td><code>id, email (unique), user_name, hashed_password, organization_id, role, is_active</code></td>
+                    <td>Supports "Organization Admin" or "Team Member" roles.</td>
+                </tr>
+                <tr>
+                    <td><code>organization_invites</code></td>
+                    <td><code>id, code_hash, organization_id, created_by_user_id, expires_at, used_at</code></td>
+                    <td>Stores a SHA-256 hash of single-use codes.</td>
+                </tr>
+                <tr>
+                    <td><code>tenders</code></td>
+                    <td><code>id, title, procuring_entity, sector, region, deadline, status, description, budget, requirements (JSON), raw_document_path, ai_summary, extracted_requirements, embedding</code></td>
+                    <td>A centralized, shared catalog; not exclusively owned by any single organization.</td>
+                </tr>
+                <tr>
+                    <td><code>tender_matches</code></td>
+                    <td><code>id, profile_id, tender_id, total_score, is_qualified, compliance_decision, ai_justification, breakdown (JSON)</code></td>
+                    <td>Cache-aside mechanism storing match results to optimize AI inference costs.</td>
+                </tr>
+                <tr>
+                    <td><code>opportunity_tracking</code></td>
+                    <td><code>id, organization_id, tender_id, status, notes, updated_by_user_id, created_at, updated_at</code></td>
+                    <td>Records for the pipeline workflow.</td>
+                </tr>
+                <tr>
+                    <td><code>notifications</code></td>
+                    <td><code>id, user_id, type, message, read_flag, created_at</code></td>
+                    <td>System alerts specific to individual users.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 4. Core Logic -->
+    <div class="page-break"></div>
+    <div class="container">
+        <h1 id="core-logic">4. Core System Implementation & AI Workflows</h1>
+        
+        <h2>4.1 Tender Ingestion Pipeline</h2>
+        <p>Tenders are ingested via file uploads (PDF/TXT) or raw text. For PDFs, <code>pypdf</code> extracts text while injecting <code>--- Page N ---</code> markers for citation accuracy. The first 30,000 characters are transmitted to Gemini with a strict schema to extract metadata. PDFs without a text layer are rejected (no OCR).</p>
+
+        <h2>4.2 AI-Powered Tender Matching Workflow</h2>
+        <p>The evaluation engine calculates a 100-point compatibility score, requiring 60 points for a "qualified" (BID) status.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Component</th>
+                    <th>Points</th>
+                    <th>Evaluation Rule</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Sector</strong></td>
+                    <td>25</td>
+                    <td>Case-insensitive substring match between company and tender sectors.</td>
+                </tr>
+                <tr>
+                    <td><strong>Region</strong></td>
+                    <td>20</td>
+                    <td>Matches if company lists 'Ethiopia' or the specific tender region.</td>
+                </tr>
+                <tr>
+                    <td><strong>Experience</strong></td>
+                    <td>25</td>
+                    <td>Calculated as <code>years / 3 * 25</code> (capped at 25 points).</td>
+                </tr>
+                <tr>
+                    <td><strong>AI Semantic Fit</strong></td>
+                    <td>30</td>
+                    <td>Gemini LLM rates certifications, past projects, and experience against the tender requirements and summary.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>4.3 Compliance Audit</h2>
+        <p>The system executes three strict rule-based checks: trade/business license, tax clearance, and VAT/TIN. Gemini, prompted as an Ethiopian public-procurement (FPPA) auditor, then returns a decision (BID, NO-BID, or CONDITIONAL), a justification, disqualification risks, and safeguards to complete before sealing the bid envelope.</p>
+
+        <h2>4.4 Tender Q&A</h2>
+        <p>Up to 40,000 characters of source text are sent to Gemini with instructions to answer only from that text and cite sections or pages. The reply explicitly handles ungrounded requests by answering ‘This information is not available in the provided tender documents’ when the text does not contain the answer.</p>
+    </div>
+
+    <!-- 5. API Reference -->
+    <div class="page-break"></div>
+    <div class="container">
+        <h1 id="api-reference">5. API Reference</h1>
+        <p>The backend exposes 29 endpoints. All endpoints require <code>Authorization: Bearer &lt;token&gt;</code> except those designated as public.</p>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Group</th>
+                    <th>Method and Path</th>
+                    <th>Purpose</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>System/Auth</strong></td>
+                    <td><code>GET /health</code><br><code>POST /api/auth/register</code><br><code>POST /api/auth/token</code></td>
+                    <td>Health check (public).<br>Create company account or join by invitation.<br>Log in, receive JWT.</td>
+                </tr>
+                <tr>
+                    <td><strong>Tenders</strong></td>
+                    <td><code>GET /api/tenders</code><br><code>POST /api/tenders/upload</code><br><code>GET /api/tenders/semantic-search</code><br><code>POST /api/tenders/{id}/ask</code></td>
+                    <td>List with filters (sector, region, status, deadline).<br>Upload PDF/TXT or paste text and ingest via AI.<br>Rank tenders by vector embedding similarity.<br>Query a specific tender document.</td>
+                </tr>
+                <tr>
+                    <td><strong>Profile</strong></td>
+                    <td><code>GET /api/profile/match/{id}</code><br><code>GET /api/profile/compliance/{id}</code><br><code>GET /api/profile/matches</code></td>
+                    <td>Retrieve match score (cached; supports force_refresh).<br>Execute FPPA compliance audit.<br>All tenders ranked by score (min_score filter).</td>
+                </tr>
+                <tr>
+                    <td><strong>Pipeline</strong></td>
+                    <td><code>GET /api/opportunities</code><br><code>PUT /api/opportunities/{id}/status</code></td>
+                    <td>List the company's tracked opportunities.<br>Update stage and tracking notes.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 6. Frontend and Setup -->
+    <div class="page-break"></div>
+    <div class="container">
+        <h1 id="frontend">6. Frontend Architecture</h1>
+        <p>The frontend uses the Next.js App Router. The JWT is kept in <code>sessionStorage</code>; a 401 response clears it and returns the user to sign-in. The API address comes from <code>NEXT_PUBLIC_API_BASE_URL</code>.</p>
+        <ul>
+            <li><strong>Ranked Opportunities (<code>/</code>):</strong> Metric cards, search, sector and minimum-score filters; tenders ranked by score; save to pipeline; select up to 5 to compare.</li>
+            <li><strong>Tender Detail Drawer:</strong> Score breakdown, AI justification, FPPA compliance audit, question box with citations.</li>
+            <li><strong>Opportunity Pipeline (<code>/opportunities</code>):</strong> Board of stage columns, stage dropdown on each card, notes.</li>
+            <li><strong>Upload Tender (<code>/ingest</code>):</strong> PDF/TXT upload or pasted text; shows extracted fields.</li>
+            <li><strong>Company Profile (<code>/profile</code>):</strong> Edit sectors, regions, experience, certifications, past projects.</li>
+        </ul>
+
+        <h1 id="setup">7. System Implementation & Setup</h1>
+        <pre><code>git clone -b finish-mvp https://github.com/bereketcodes/ETIOMS.git
+cd ETIOMS
+python -m venv venv
+venv\Scripts\activate  # (Linux/macOS: source venv/bin/activate)
+pip install -r requirements.txt
+copy .env.example .env
+
+# Start Backend
+python -m uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000
+
+# Start Frontend
+cd frontend
+npm install
+npm run dev</code></pre>
+        <p>The bundled database contains a demo company, AfroTech Solutions PLC.</p>
+    </div>
+
+    <!-- 8. Testing & Limitations -->
+    <div class="page-break"></div>
+    <div class="container">
+        <h1 id="testing">8. Testing and Evaluation</h1>
+        <p>The backend was exercised with a scripted API smoke test against a clean temporary database to verify fallback behaviors when the AI was unavailable.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Test Scenario</th>
+                    <th>Result / Verification</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Protected endpoint accessed without token</td>
+                    <td>401 Unauthorized</td>
+                </tr>
+                <tr>
+                    <td>Wrong password at login / Duplicate email</td>
+                    <td>401 Unauthorized / 409 Conflict</td>
+                </tr>
+                <tr>
+                    <td>Match score with a fully matching profile, AI unavailable</td>
+                    <td>70 (25 sector + 20 region + 25 experience); message explains the AI part is unavailable.</td>
+                </tr>
+                <tr>
+                    <td>Q&A without an API key</td>
+                    <td>Returns a not-grounded message, no crash.</td>
+                </tr>
+                <tr>
+                    <td>Tenant isolation</td>
+                    <td>A second company sees an empty pipeline and gets 404 when updating the first company’s opportunity.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h1 id="limitations">9. Limitations and Future Work</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>Component Area</th>
+                    <th>Current Limitation</th>
+                    <th>Proposed Future Work</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Q&A Retrieval</strong></td>
+                    <td>The first 40,000 characters of the document are sent as one prompt. Citations are written by the model and not machine-checked.</td>
+                    <td>Split documents into chunks, embed and retrieve the best chunks, and verify citations against page markers.</td>
+                </tr>
+                <tr>
+                    <td><strong>Authorization</strong></td>
+                    <td>Tenders are a shared catalogue. Admin check is looser than strict role comparison.</td>
+                    <td>Add strict role dependency and restrict tender creation and invitations to admins.</td>
+                </tr>
+                <tr>
+                    <td><strong>Score Cache</strong></td>
+                    <td>Cached match scores are not cleared when the company profile changes.</td>
+                    <td>Invalidate cached matches on profile update.</td>
+                </tr>
+                <tr>
+                    <td><strong>Ingestion / OCR</strong></td>
+                    <td>Scanned PDFs without a text layer are rejected. Unparseable deadlines become today's date.</td>
+                    <td>Add OCR, flag uncertain fields for review, and generate unique file names.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</body>
+</html>
