@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, String, Float, Date, JSON, Text
+from sqlalchemy import Column, String, Float, Date, JSON, Text,ForeignKey
 from sqlalchemy.types import TypeDecorator, CHAR
 from backend.app.database import Base
 
@@ -35,3 +35,4 @@ class Tender(Base):
     ai_summary = Column(Text, nullable=True)
     extracted_requirements = Column(JSON, nullable=True)
     embedding = Column(JSON, nullable=True)
+    organization_id = Column(GUID(), ForeignKey("organizations.id"), nullable=True)

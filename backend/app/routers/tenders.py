@@ -16,6 +16,7 @@ from backend.app.services.ingestion_service import parse_deadline, parse_tender_
 from backend.app.services.embedding_service import generate_text_embedding, cosine_similarity
 from backend.app.services.rag_service import answer_tender_question
 from backend.app.security import get_current_user
+from sqlalchemy import or_
 
 
 class TenderQuestionRequest(BaseModel):
@@ -283,11 +284,37 @@ def ask_tender_question(
 
     return answer_tender_question(tender, payload.question)
 
-
+@router.post("/extract-pdf") 
+async def upload_tender_document(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)  
+):
+    new_tender = Tender(
+        title=extracted["title"],
+        # ... other existing fields ...
+        organization_id=current_user.organization_id  
+    )
+    db.add(new_tender)
+    db.commit()
+    
 @router.get("/{tender_id}", response_model=TenderResponse)
 def get_tender_by_id(tender_id: UUID, db: Session = Depends(get_db)):
     """Fetch a single tender by its UUID."""
     tender = db.query(Tender).filter(Tender.id == tender_id).first()
     if not tender:
         raise HTTPException(status_code=404, detail="Tender not found")
-    return tender
+    return tender
+@router.get("")
+def get_all_tenders(
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    tenders = db.query(Tender).filter(
+        or_(
+            Tender.organization_id == None,
+            Tender.organization_id == current_user.organization_id
+        )
+    ).all()
+    
+    return tenders
