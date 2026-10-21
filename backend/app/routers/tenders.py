@@ -36,7 +36,40 @@ router = APIRouter(
 UPLOAD_DIR = Path("uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
 
+MAX_FILE_SIZE = 20 * 1024 * 1024  # 20 MB in bytes
+ALLOWED_EXTENSIONS = {".pdf", ".txt"}
 
+async def save_upload_safely(file: UploadFile) -> tuple[Path, bytes]:
+    """
+    Validates file extension and size, saves to disk with a random UUID name,
+    and returns (saved_path, raw_bytes).
+    """
+    # 1. Safely extract only the file extension (ignores any ../ path tricks)
+    original_name = Path(file.filename or "").name
+    ext = Path(original_name).suffix.lower()
+
+    if ext not in ALLOWED_EXTENSIONS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Unsupported file type '{ext}'. Allowed: .pdf, .txt"
+        )
+
+    # 2. Read bytes and enforce the 20 MB limit
+    file_bytes = await file.read()
+    if len(file_bytes) > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail="File is too large. Maximum allowed size is 20 MB."
+        )
+
+    # 3. Generate a safe, collision-proof filename on disk
+    safe_filename = f"{uuid.uuid4().hex}{ext}"
+    file_path = UPLOAD_DIR / safe_filename
+
+    with open(file_path, "wb") as buffer:
+        buffer.write(file_bytes)
+
+    return file_path, file_bytes
 def _persist_ingested_tender(
     db: Session,
     parsed: dict,
@@ -134,7 +167,8 @@ def ingest_tender_notice(
 @router.post("/extract-pdf", response_model=TenderResponse, status_code=status.HTTP_201_CREATED)
 async def extract_and_save_pdf(
     file: UploadFile = File(...),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
 ):
     """
     1. Uploads tender PDF dossier
@@ -145,7 +179,7 @@ async def extract_and_save_pdf(
     if not file.filename or not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files are supported.")
 
-    file_path = UPLOAD_DIR / file.filename
+    file_path, _ = await save_upload_safely(file)
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
