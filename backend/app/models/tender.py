@@ -1,16 +1,30 @@
 import uuid
+
 from sqlalchemy import Column, Date, Float, ForeignKey, JSON, String, Text
+from sqlalchemy.types import CHAR, TypeDecorator
+
 from backend.app.database import Base
 
 
-class GUID(type):
-    pass
+class GUID(TypeDecorator):
+    impl = CHAR(36)
+    cache_ok = True
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return None
+        return str(value)
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return None
+        return uuid.UUID(value) if not isinstance(value, uuid.UUID) else value
 
 
 class Tender(Base):
     __tablename__ = "tenders"
 
-    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     title = Column(String, nullable=False, index=True)
     procuring_entity = Column(String, nullable=False, index=True)
     sector = Column(String, nullable=False, index=True)
@@ -25,4 +39,4 @@ class Tender(Base):
     ai_summary = Column(Text, nullable=True)
     extracted_requirements = Column(JSON, nullable=True)
     embedding = Column(JSON, nullable=True)
-    organization_id = Column(String(36), ForeignKey("organization_profiles.id"), nullable=True)
+    organization_id = Column(GUID(), ForeignKey("organization_profiles.id"), nullable=True)
