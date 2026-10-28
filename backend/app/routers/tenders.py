@@ -1,9 +1,8 @@
 from datetime import date, timedelta
 import logging
 from pathlib import Path
-from typing import List, Optional, Tuple
-from uuid import UUID
-import uuid
+from typing import List, Optional
+from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from pydantic import BaseModel, Field
@@ -68,25 +67,34 @@ async def save_upload_safely(file: UploadFile) -> Path:
             detail=f"Unsupported file type '{ext}'. Allowed: .pdf, .txt",
         )
 
-    file.file.seek(0)
-    safe_filename = f"{uuid.uuid4().hex}{ext}"
+    try:
+        file.file.seek(0)
+    except (AttributeError, OSError):
+        pass
+
+    safe_filename = f"{uuid4().hex}{ext}"
     file_path = UPLOAD_DIR / safe_filename
 
     size = 0
-    with open(file_path, "wb") as buffer:
-        while True:
-            chunk = file.file.read(1024 * 1024)
-            if not chunk:
-                break
-            size += len(chunk)
-            if size > MAX_FILE_SIZE:
-                buffer.close()
-                file_path.unlink(missing_ok=True)
-                raise HTTPException(
-                    status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                    detail="File is too large. Maximum allowed size is 20 MB.",
-                )
-            buffer.write(chunk)
+    try:
+        with open(file_path, "wb") as buffer:
+            while True:
+                chunk = file.file.read(1024 * 1024)
+                if not chunk:
+                    break
+                size += len(chunk)
+                if size > MAX_FILE_SIZE:
+                    raise HTTPException(
+                        status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                        detail="File is too large. Maximum allowed size is 20 MB.",
+                    )
+                buffer.write(chunk)
+    except HTTPException:
+        file_path.unlink(missing_ok=True)
+        raise
+    except Exception:
+        file_path.unlink(missing_ok=True)
+        raise
 
     return file_path
 
@@ -239,6 +247,8 @@ async def upload_tender_notice(
             except Exception as exc:
                 logger.exception("Failed to read uploaded text file.")
                 raise HTTPException(status_code=500, detail="Unable to read the uploaded tender file.") from exc
+    elif not raw_text:
+        raise HTTPException(status_code=400, detail="Provide a tender notice text or upload a .pdf/.txt file.")
 
     parsed = _ingest_notice_text(raw_text)
     return _persist_ingested_tender(db, parsed, raw_document_path=str(saved_path) if saved_path else None, organization_id=current_user.organization_id)
@@ -342,3 +352,80 @@ def ask_tender_question(
 def get_tender_by_id(tender_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Fetch a single tender by its UUID."""
     return _get_accessible_tender(db, tender_id, current_user)
+
+
+@router.get("")
+def get_all_tenders_legacy(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Compatibility alias for older frontend calls; preserves organization-scoped access."""
+    return db.query(Tender).filter(_public_or_organization_scope(current_user)).all()
+
+
+@router.get("/search")
+def search_tenders_by_keyword(
+    query: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Backward-compatible tender search endpoint with organization access enforcement."""
+    if not query or not query.strip():
+        raise HTTPException(status_code=400, detail="Query cannot be blank.")
+    term = f"%{query.strip()}%"
+    return (
+        db.query(Tender)
+        .filter(_public_or_organization_scope(current_user))
+        .filter((Tender.title.ilike(term)) | (Tender.procuring_entity.ilike(term)) | (Tender.description.ilike(term)))
+        .all()
+    )
+
+
+@router.get("/download/{tender_id}")
+def download_tender_document(
+    tender_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Download a saved tender document only when the user can access the tender."""
+    tender = _get_accessible_tender(db, tender_id, current_user)
+    if not tender.raw_document_path:
+        raise HTTPException(status_code=404, detail="No document stored for this tender.")
+    return {"document_path": tender.raw_document_path}
+
+
+@router.get("/public")
+def get_public_tenders(db: Session = Depends(get_db)):
+    """Public tender notices remain globally visible while private tenders stay organization-scoped."""
+    return db.query(Tender).filter(Tender.organization_id.is_(None)).all()
+
+
+@router.get("/org")
+def get_org_tenders(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """List the user's organization tenders and public tenders."""
+    return db.query(Tender).filter(_public_or_organization_scope(current_user)).all()
+
+
+@router.get("/by-organization/{organization_id}")
+def get_tenders_by_organization(
+    organization_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Ensure callers can only inspect their own organization, not another org's private tenders."""
+    if current_user.organization_id != organization_id:
+        raise HTTPException(status_code=403, detail="Organization access denied.")
+    return db.query(Tender).filter(_public_or_organization_scope(current_user)).all()
+
+
+@router.get("/{tender_id}/documents")
+def get_tender_documents(
+    tender_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Return tender document metadata only for accessible tenders."""
+    tender = _get_accessible_tender(db, tender_id, current_user)
+    if not tender.raw_document_path:
+        return []
+    return [{"path": tender.raw_document_path, "name": Path(tender.raw_document_path).name}]

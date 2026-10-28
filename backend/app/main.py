@@ -1,51 +1,15 @@
+import logging
 import os
-
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app.database import Base, engine
-from backend.app.models.tender import Tender
-from backend.app.models.organization import OrganizationProfile
-from backend.app.models.organization_invite import OrganizationInvite
-from backend.app.models.users import User
-from backend.app.models.tender_matches import TenderMatch
-from backend.app.models.opportunity import OpportunityTracking
-from backend.app.models.notification import Notification
-from backend.app.routers import auth, tenders, profile, intelligence, opportunities, notifications, admin
+from backend.app.main import app
 
-# Initialize database schema
-Base.metadata.create_all(bind=engine)
+logger = logging.getLogger(__name__)
 
-app = FastAPI(
-    title="ETIOMS API",
-    version="1.0.0",
-    description="Ethiopian Tender Intelligence & Automated Compliance System"
-)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        origin.strip()
-        for origin in os.getenv(
-            "FRONTEND_ORIGINS",
-            "http://localhost:3000,http://127.0.0.1:3000",
-        ).split(",")
-        if origin.strip()
-    ],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Connect modular endpoints
-app.include_router(auth.router)
-app.include_router(tenders.router)
-app.include_router(profile.router)
-app.include_router(intelligence.router)
-app.include_router(opportunities.router)
-app.include_router(notifications.router)
-app.include_router(admin.router)
-
-
-@app.get("/health", tags=["System"])
-def health_check():
-    return {"status": "healthy", "engine": "ETIOMS Production Core"}
+@app.exception_handler(Exception)
+async def generic_exception_handler(request: Request, exc: Exception):
+    logger.exception("Unhandled API error for %s %s", request.method, request.url.path)
+    return JSONResponse(status_code=500, detail="Internal server error.")
