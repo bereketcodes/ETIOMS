@@ -20,3 +20,4 @@ class User(Base):
         index=True,
     )
     is_active = Column(Boolean, nullable=False, default=True)
+    role = Column(String(50), nullable=False, default="Business User")

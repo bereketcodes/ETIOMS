@@ -1,10 +1,5 @@
-import logging
-
 import pypdf
 from fastapi import HTTPException
-
-logger = logging.getLogger(__name__)
-
 
 def extract_text_from_pdf(file_path: str) -> str:
     """Reads pages from a PDF file and returns aggregated plain text."""
@@ -20,9 +15,8 @@ def extract_text_from_pdf(file_path: str) -> str:
         if not full_text:
             raise ValueError("No extractable text found in PDF.")
         return full_text
-    except Exception as exc:
-        logger.exception("PDF text extraction failed")
+    except Exception as e:
         raise HTTPException(
             status_code=400,
-            detail="Failed to process PDF document.",
-        ) from exc
+            detail=f"Failed to process PDF document: {str(e)}"
+        )

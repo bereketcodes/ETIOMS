@@ -1,7 +1,10 @@
 import uuid
-from sqlalchemy import Column, String, Float, Date, JSON, Text
-from sqlalchemy.types import TypeDecorator, CHAR
+
+from sqlalchemy import Column, Date, Float, ForeignKey, JSON, String, Text
+from sqlalchemy.types import CHAR, TypeDecorator
+
 from backend.app.database import Base
+
 
 class GUID(TypeDecorator):
     impl = CHAR(36)
@@ -16,6 +19,7 @@ class GUID(TypeDecorator):
         if value is None:
             return None
         return uuid.UUID(value) if not isinstance(value, uuid.UUID) else value
+
 
 class Tender(Base):
     __tablename__ = "tenders"
@@ -34,3 +38,5 @@ class Tender(Base):
     raw_document_path = Column(String, nullable=True)
     ai_summary = Column(Text, nullable=True)
     extracted_requirements = Column(JSON, nullable=True)
+    embedding = Column(JSON, nullable=True)
+    organization_id = Column(GUID(), ForeignKey("organization_profiles.id"), nullable=True)

@@ -23,14 +23,11 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/token")
 
 
 def _get_jwt_secret() -> str:
-    secret = os.getenv("JWT_SECRET_KEY", "").strip()
-    if (
-        len(secret) < 32
-        or secret.lower() in {"change-me", "replace-with-a-unique-random-secret"}
-    ):
+    secret = os.getenv("JWT_SECRET_KEY")
+    if not secret or len(secret) < 32:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="JWT_SECRET_KEY must be configured with a unique secret of at least 32 characters.",
+            detail="JWT_SECRET_KEY must be configured with at least 32 characters.",
         )
     return secret
 
