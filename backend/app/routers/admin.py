@@ -1,4 +1,3 @@
-
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -147,4 +146,8 @@ def get_system_admin_stats(
 ) -> Dict[str, Any]:
     """System-wide administrative statistics; only System Admins may access this route."""
     _require_role(current_user, {"System Admin"})
+<<<<<<< HEAD
     return get_admin_stats(db=db, current_user=current_user)
+=======
+    return get_admin_stats(db=db, current_user=current_user)
+>>>>>>> fix/security-review

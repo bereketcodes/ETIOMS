@@ -12,13 +12,27 @@ __pycache__/
 venv/
 .venv/
 
-# Local backups and database snapshots
+# Local databases and project data
+*.db
+*.sqlite3
+**/*.db
+**/*.sqlite3
 *.before-ai-backup
 *-before-ai.db
+*.log
+
+# Uploads and generated files
+uploads/
+uploads/*
 
 # Frontend dependencies and build output
 frontend/node_modules/
 frontend/.next/
-#database/
-etioms.db
-uploads/
+
+# Local config overrides
+.env.local
+.env.production
+.env.development
+
+# Keep common generated assets tracked if needed
+# NOTE: intentionally not deleting any local project files here.
