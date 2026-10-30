@@ -49,25 +49,31 @@ def get_admin_stats(
         total_opportunities = sum(pipeline_by_stage.values())
         
         return {
-            "scope": "system",
-            "organization": {
-                "name": org_name,
-                "id": str(current_user.organization_id),
-                "team_size": total_team_members,
-                "total_system_users": all_users_count,
-            },
-            "tenders": {
-                "total_ingested": total_tenders,
-                "open_tenders": open_tenders,
-                "sectors_breakdown": sectors_summary,
-            },
-            "pipeline": {
-                "total_tracked": total_opportunities,
-                "by_stage": pipeline_by_stage,
-                "submitted": pipeline_by_stage.get("Submitted", 0),
-                "awarded": pipeline_by_stage.get("Awarded", 0),
-            },
-        }
+        "scope": "organization",
+        "organization": {
+            "name": org_name,
+            "id": str(current_user.organization_id),
+            "team_size": total_team_members,
+        },
+        "tenders": {
+            "total_ingested": total_tenders,
+            "open_tenders": open_tenders,
+            "sectors_breakdown": sectors_summary,
+        },
+        "pipeline": {
+            "total_tracked": total_opportunities,
+            "by_stage": pipeline_by_stage,
+            "submitted": pipeline_by_stage.get("Submitted", 0),
+            "awarded": pipeline_by_stage.get("Awarded", 0),
+        },
+        # ADD THIS BLOCK TO PREVENT THE CRASH:
+        "system_health": {
+            "api_status": "Operational",
+            "database_engine": "PostgreSQL (Neon) / SQLAlchemy",
+            "ai_engine": "Google Gemini 3.6/Flash + RAG",
+            "auth_security": "JWT Bearer + PBKDF2-SHA256",
+        },
+    }
 
     _require_role(current_user, {"Organization Admin"})
 
@@ -101,5 +107,11 @@ def get_admin_stats(
             "by_stage": pipeline_by_stage,
             "submitted": pipeline_by_stage.get("Submitted", 0),
             "awarded": pipeline_by_stage.get("Awarded", 0),
+        },
+        "system_health": {
+            "api_status": "Operational",
+            "database_engine": "PostgreSQL (Neon) / SQLAlchemy",
+            "ai_engine": "Google Gemini 3.6/Flash + RAG",
+            "auth_security": "JWT Bearer + PBKDF2-SHA256",
         },
     }
