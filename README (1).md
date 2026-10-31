@@ -124,6 +124,4 @@ start_etioms.bat   Windows launcher
 - AI features need `GEMINI_API_KEY`; without it, ingestion and compliance audit return an error.
 - There is no automated test suite yet.
 
-## Documentation
 
-Full project documentation: see the `docs/` folder.
